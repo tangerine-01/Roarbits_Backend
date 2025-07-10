@@ -1,4 +1,5 @@
-package main.java.roarbits.user.controller;
+package roarbits.user.controller;
 
 public class UserController {
+
 }

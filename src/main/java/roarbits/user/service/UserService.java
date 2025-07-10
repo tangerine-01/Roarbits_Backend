@@ -1,4 +1,5 @@
-package main.java.roarbits.user.service;
+package roarbits.user.service;
+
 
 public class UserService {
 }
