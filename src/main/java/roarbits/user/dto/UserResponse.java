@@ -10,8 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class SignUpResponse {
+public class UserResponse {
     private Long id;
     private String email;
-    private String message;
 }

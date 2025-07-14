@@ -1,4 +1,5 @@
 package roarbits.global.api;
 
-public class BaseCode {
+public interface BaseCode {
+    ReasonDto getReason();
 }
