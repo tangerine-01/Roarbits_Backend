@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 @Service
 @Component
 public class JwtTokenProvider {
-    private final String secretKey = "비밀키32자이상";
+    private final String secretKey = "비밀키 32자이상";
 
     public String resolveToken(HttpServletRequest request) {
         String bearer = request.getHeader("Authorization");
