@@ -15,11 +15,6 @@ import org.springframework.security.crypto.password.PasswordEncoder; // Password
 public class GlobalSecurityConfig {
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    @Bean
     public AuthenticationManager authenticationManager(
         AuthenticationConfiguration authConfig
     ) throws Exception {

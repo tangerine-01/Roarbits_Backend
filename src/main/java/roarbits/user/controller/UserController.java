@@ -8,7 +8,6 @@ import roarbits.global.api.ApiResponse;
 import roarbits.global.api.SuccessCode;
 
 import roarbits.user.dto.UserResponse;
-import roarbits.user.dto.UserUpdateRequest;
 import roarbits.user.entity.User;
 import roarbits.user.service.UserService;
 

@@ -36,7 +36,7 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        return email;  // 또는 loginId 쓰기로 했다면 loginId
+        return email;
     }
 
     @Override
