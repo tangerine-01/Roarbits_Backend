@@ -20,8 +20,8 @@ public class SubjectService {
         return subjectRepository.findAll();
     }
 
-    public Subject getSubjectBySubjectId(String subjectId) {
-        return subjectRepository.findBySubjectId(subjectId)
+    public Subject getSubjectById(Long id) {
+        return subjectRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("과목을 찾을 수 없습니다."));
     }
 

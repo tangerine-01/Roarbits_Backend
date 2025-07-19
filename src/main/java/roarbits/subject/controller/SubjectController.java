@@ -26,9 +26,9 @@ public class SubjectController {
         return ApiResponse.onSuccess(SuccessCode.SUBJECT_LIST_SUCCESS, subjects);
     }
 
-    @GetMapping("/{subjectId}")
-    public ApiResponse<Subject> getSubjectById(@PathVariable String subjectId) {
-        Subject subject = subjectService.getSubjectBySubjectId(subjectId);
+    @GetMapping("/{id}")
+    public ApiResponse<Subject> getSubjectById(@PathVariable Long id) {
+        Subject subject = subjectService.getSubjectById(id);
         return ApiResponse.onSuccess(SuccessCode.SUBJECT_DETAIL_SUCCESS, subject);
     }
 }
