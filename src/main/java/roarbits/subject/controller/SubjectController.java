@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import roarbits.global.api.ApiResponse;
 import roarbits.global.api.SuccessCode;
+import roarbits.subject.dto.SubjectDto;
 import roarbits.subject.entity.Subject;
 import roarbits.subject.service.SubjectService;
 
@@ -17,8 +18,17 @@ public class SubjectController {
     private final SubjectService subjectService;
 
     @GetMapping
-    public ApiResponse<List<Subject>> getAllSubjects() {
-        List<Subject> subjects = subjectService.getAllSubjects();
+    public ApiResponse<List<SubjectDto>> getAllSubjects(
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction) {
+
+        List<SubjectDto> subjects = subjectService.getAllSubjectsSorted(sortBy, direction);
         return ApiResponse.onSuccess(SuccessCode.SUBJECT_LIST_SUCCESS, subjects);
+    }
+
+    @GetMapping("/{subjectId}")
+    public ApiResponse<Subject> getSubjectById(@PathVariable String subjectId) {
+        Subject subject = subjectService.getSubjectBySubjectId(subjectId);
+        return ApiResponse.onSuccess(SuccessCode.SUBJECT_DETAIL_SUCCESS, subject);
     }
 }
