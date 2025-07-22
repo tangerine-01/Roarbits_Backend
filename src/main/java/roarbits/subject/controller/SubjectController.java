@@ -31,4 +31,28 @@ public class SubjectController {
         Subject subject = subjectService.getSubjectById(id);
         return ApiResponse.onSuccess(SuccessCode.SUBJECT_DETAIL_SUCCESS, subject);
     }
+
+    @GetMapping("/id/{subjectId}")
+    public ApiResponse<SubjectDto> getSubjectBySubjectId(@PathVariable String subjectId) {
+        SubjectDto subject = subjectService.getSubjectBySubjectId(subjectId);
+        return ApiResponse.onSuccess(SuccessCode.SUBJECT_DETAIL_SUCCESS, subject);
+    }
+
+    @GetMapping("/search")
+    public ApiResponse<List<SubjectDto>> searchSubjects(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String professor) {
+
+        List<SubjectDto> result;
+
+        if (name != null) {
+            result = subjectService.searchSubjectsByName(name);
+        } else if (professor != null) {
+            result = subjectService.searchSubjectsByProfessor(professor);
+        } else {
+            result = List.of();
+        }
+
+        return ApiResponse.onSuccess(SuccessCode.SUBJECT_SEARCH_SUCCESS, result);
+    }
 }

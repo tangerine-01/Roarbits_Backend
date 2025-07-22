@@ -8,8 +8,8 @@ import roarbits.user.entity.User;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2025-07-19T17:50:44+0900",
-    comments = "version: 1.5.5.Final, compiler: IncrementalProcessingEnvironment from gradle-language-java-8.13.jar, environment: Java 17.0.15 (Oracle Corporation)"
+    date = "2025-07-22T21:46:51+0900",
+    comments = "version: 1.5.5.Final, compiler: IncrementalProcessingEnvironment from gradle-language-java-8.13.jar, environment: Java 17.0.15 (Eclipse Adoptium)"
 )
 @Component
 public class AuthMapperImpl implements AuthMapper {
