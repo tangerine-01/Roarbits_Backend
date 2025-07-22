@@ -8,7 +8,7 @@ import roarbits.user.entity.User;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2025-07-16T19:28:41+0900",
+    date = "2025-07-22T22:21:57+0900",
     comments = "version: 1.5.5.Final, compiler: IncrementalProcessingEnvironment from gradle-language-java-8.13.jar, environment: Java 17.0.13 (Oracle Corporation)"
 )
 @Component
