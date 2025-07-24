@@ -25,6 +25,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
         String token = jwtTokenProvider.resolveToken(request);
+        String requestURI = request.getRequestURI();
+        if (requestURI.startsWith("/api/auth/signup") ||
+                requestURI.startsWith("/api/auth/login") ||
+                requestURI.startsWith("/api/auth/reissue")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         if (token != null && jwtTokenProvider.validateToken(token)) {
             Authentication auth = jwtTokenProvider.getAuthentication(token);
             SecurityContextHolder.getContext().setAuthentication(auth);

@@ -5,6 +5,10 @@ out/
 .gradle/
 .idea/
 
+## 빌드/캐시 관련 폴더 무시
+build/
+.gradle/
+
 ### Eclipse ###
 .apt_generated
 .classpath
@@ -28,4 +32,4 @@ bin/
 .vscode/
 
 ### Mac OS ###
-.DS_Store
+.DS_Store.gradle/

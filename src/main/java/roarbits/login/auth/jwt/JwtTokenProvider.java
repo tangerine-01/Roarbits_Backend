@@ -23,9 +23,8 @@ import java.util.stream.Collectors;
 @Service
 @Component
 public class JwtTokenProvider {
-    private final String secretKey = "너의_비밀키_여기에_넣기_32자이상";
+    private final String secretKey = "비밀키 32자이상";
 
-    // 헤더에서 "Bearer " 떼고 토큰만 리턴
     public String resolveToken(HttpServletRequest request) {
         String bearer = request.getHeader("Authorization");
         if (bearer != null && bearer.startsWith("Bearer ")) {

@@ -18,7 +18,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long userId;
     private String email;
     private String password;
 
@@ -36,7 +36,7 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        return email;  // 또는 loginId 쓰기로 했다면 loginId
+        return email;
     }
 
     @Override
