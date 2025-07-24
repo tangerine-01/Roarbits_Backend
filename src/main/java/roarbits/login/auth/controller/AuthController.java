@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.*;
 import roarbits.global.api.ApiResponse;
 import roarbits.global.api.SuccessCode;
 
+import roarbits.login.auth.jwt.JwtTokenProvider;
+import roarbits.login.auth.jwt.RefreshTokenRepository;
 import roarbits.login.dto.LoginRequest;
 import roarbits.login.dto.LoginResponse;
 import roarbits.login.dto.TokenRefreshRequest;
@@ -16,6 +18,8 @@ import roarbits.login.service.AuthService;
 
 import roarbits.user.dto.SignUpRequest;
 import roarbits.user.dto.SignUpResponse;
+import roarbits.user.entity.User;
+import roarbits.user.repository.UserRepository;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -23,6 +27,9 @@ import roarbits.user.dto.SignUpResponse;
 public class AuthController {
 
     private final AuthService authService;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final UserRepository userRepository;
 
     // 회원가입
     @PostMapping("/signup")
@@ -43,6 +50,22 @@ public class AuthController {
         LoginResponse response = authService.login(loginRequest);
         return ResponseEntity.ok(response);
     }
+
+    // 로그아웃
+    @PostMapping("/logout")
+    public ApiResponse<Void> logout(@RequestHeader("Authorization") String accessTokenHeader) {
+        String accessToken = accessTokenHeader.replace("Bearer ", "");
+
+        String email = jwtTokenProvider.getUsernameFromToken(accessToken);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("해당 사용자를 찾을 수 없습니다."));
+
+        refreshTokenRepository.deleteByUser(user);
+
+        return ApiResponse.onSuccess(SuccessCode.USER_LOGOUT_SUCCESS, null);
+    }
+
 
     // 토큰 재발급
     @PostMapping("/reissue")

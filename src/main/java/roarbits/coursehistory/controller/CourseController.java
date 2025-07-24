@@ -14,7 +14,6 @@ import java.util.List;
 public class CourseController {
     private final CourseService service;
 
-
     @GetMapping
     public ResponseEntity<List<CourseResponse>> list(
             @RequestParam Long userId

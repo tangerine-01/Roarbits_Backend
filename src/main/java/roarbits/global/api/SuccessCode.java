@@ -30,6 +30,8 @@ public enum SuccessCode implements BaseCode {
 
     // Subject
     SUBJECT_LIST_SUCCESS(HttpStatus.OK, "SUBJECT_200", "과목 리스트 조회에 성공했습니다."),
+    SUBJECT_DETAIL_SUCCESS(HttpStatus.OK, "SUBJECT_201", "과목 상세 조회에 성공했습니다."),
+    SUBJECT_SEARCH_SUCCESS(HttpStatus.OK, "SUBJECT_202", "과목 검색에 성공했습니다."),
 
     // S3
     S3_UPLOAD_SUCCESS(HttpStatus.OK, "S3_200", "S3 업로드가 성공적으로 완료되었습니다.");
