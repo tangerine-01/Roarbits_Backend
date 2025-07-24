@@ -19,6 +19,9 @@ public enum Errorcode implements BaseCode {
 
     USER_INFO_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_4042", "사용자 정보를 찾을 수 없습니다."),
 
+    // Subject
+    SUBJECT_NOT_FOUND(HttpStatus.NOT_FOUND, "SUBJECT_404", "해당 과목을 찾을 수 없습니다."),
+
     // Jwt
     WRONG_REFRESH_TOKEN(HttpStatus.NOT_FOUND, "JWT_4041", "일치하는 리프레시 토큰이 없습니다."),
     IP_NOT_MATCHED(HttpStatus.FORBIDDEN, "JWT_4031", "리프레시 토큰의 IP주소가 일치하지 않습니다."),

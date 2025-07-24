@@ -6,7 +6,7 @@ out/
 .idea/
 
 ## 빌드/캐시 관련 폴더 무시
-build/
+/build/
 .gradle/
 
 ### Eclipse ###
