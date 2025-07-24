@@ -2,18 +2,20 @@ package roarbits.timetable.dto;
 
 import lombok.*;
 
-import java.util.List;
-
 @Getter
 @Setter
-public class TimeSlotRequestDto {
-    private Long userId; // 사용자 ID
-    private String courseName; // 과목명
-    private String courseCode; // 과목 코드
-    private String professor; // 교수명
-    private String dayOfWeek; // 요일 (예: MON, TUE, WED, THU, FRI)
-    private String startTime; // 시작 시간 (예: 09:00)
-    private String endTime; // 종료 시간 (예: 10:30)
-    private String location; // 강의실 위치
-    private List<TimeSlotResponseDto> timeSlots;
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class TimeSlotDto {
+    private Long subjectId; // 과목 ID
+    private String subjectName; // 과목 이름
+    private String startTime; // 시간 (예: "9:00")
+    private String endTime; // 시간 (예: "10:00")
+    private String location; // 장소 (예: "101호")
+    private String professor; // 교수님 이름
+    private Integer credit; // 학점
+    private String category; // 카테고리 (예: "전공", "교양")
+
+    private Integer day; // 요일 (0: 월요일, 1: 화요일, ..., 6: 일요일)
 }
