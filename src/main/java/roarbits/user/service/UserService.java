@@ -35,7 +35,6 @@ public class UserService {
         return SignUpResponse.builder()
                 .id(saved.getId())
                 .email(saved.getEmail())
-                .message("회원가입 성공")
                 .build();
     }
     public UserResponse getUserInfo(String email) {

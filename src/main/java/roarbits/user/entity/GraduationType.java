@@ -1,4 +1,8 @@
 package roarbits.user.entity;
 
-public class GraduationType {
+public enum GraduationType {
+    UNDERGRAD,
+    POSTGRAD,
+    TRANSFER,
+    ETC
 }

@@ -1,5 +1,6 @@
 package roarbits.login.auth.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,9 +27,12 @@ public class AuthController {
     // 회원가입
     @PostMapping("/signup")
     public ApiResponse<SignUpResponse> signUp(
-            @RequestBody SignUpRequest signUpRequest
+           @Valid @RequestBody SignUpRequest req
     ) {
-        SignUpResponse dto = authService.signUp(signUpRequest);
+        if (!req.getPassword().equals(req.getPasswordConfirm())) {
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다");
+        }
+        SignUpResponse dto = authService.signUp(req);
         return ApiResponse.onSuccess(SuccessCode.CREATED, dto);
     }
 

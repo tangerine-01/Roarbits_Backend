@@ -10,19 +10,23 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import roarbits.login.auth.jwt.JwtAuthenticationFilter;
 import roarbits.login.auth.jwt.JwtTokenProvider;
+import roarbits.login.auth.jwt.JwtValidationFilter;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-
     private final JwtTokenProvider jwtTokenProvider;
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public JwtValidationFilter jwtValidationFilter(JwtTokenProvider p) {
+        return new JwtValidationFilter(p);
     }
 
     @Bean
@@ -37,7 +41,6 @@ public class SecurityConfig {
                 )
 
                 .authorizeHttpRequests(auth -> auth
-                        // --- Swagger / OpenAPI ----
                         .requestMatchers(
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
@@ -50,7 +53,7 @@ public class SecurityConfig {
                 )
 
                 .addFilterBefore(
-                        new JwtAuthenticationFilter(jwtTokenProvider),
+                        new JwtValidationFilter(jwtTokenProvider),
                         UsernamePasswordAuthenticationFilter.class
                 )
         ;

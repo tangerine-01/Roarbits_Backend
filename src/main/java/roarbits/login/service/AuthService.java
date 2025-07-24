@@ -35,7 +35,6 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthMapper authMapper;
 
-    // 1. 회원가입
     @Transactional
     public SignUpResponse signUp(SignUpRequest req) {
         if (userRepository.findByEmail(req.getEmail()).isPresent()) {
@@ -53,11 +52,11 @@ public class AuthService {
     }
 
 
-    // 2. 로그인
     @Transactional
     public LoginResponse login(LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())
+                new UsernamePasswordAuthenticationToken(
+                        loginRequest.getEmail(), loginRequest.getPassword())
         );
 
         SecurityContextHolder.getContext().setAuthentication(authentication);

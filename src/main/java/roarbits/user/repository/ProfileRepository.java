@@ -1,4 +1,10 @@
 package roarbits.user.repository;
 
-public class ProfileRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.Optional;
+import roarbits.user.entity.Profile;
+import roarbits.user.entity.User;
+
+public interface ProfileRepository extends JpaRepository<Profile, Long> {
+    Optional<Profile> findByUser(User user);
 }

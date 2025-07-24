@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import roarbits.user.entity.Profile;
 
 @Entity
 @Getter
@@ -26,6 +27,12 @@ public class User implements UserDetails {
     @CollectionTable(name="user_roles", joinColumns=@JoinColumn(name="user_id"))
     @Column(name="role")
     private List<String> roles;
+
+    @OneToOne(mappedBy = "user",
+    cascade = CascadeType.ALL,
+    orphanRemoval = true,
+    fetch = FetchType.LAZY)
+    private Profile profile;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
