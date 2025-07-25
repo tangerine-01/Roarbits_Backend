@@ -7,7 +7,6 @@ out/
 
 ## 빌드/캐시 관련 폴더 무시
 build/
-.gradle/
 
 ### Eclipse ###
 .apt_generated
@@ -33,5 +32,3 @@ bin/
 
 ### Mac OS ###
 .DS_Store.gradle/
-build/
-build/
