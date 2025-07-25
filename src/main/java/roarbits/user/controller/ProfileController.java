@@ -71,7 +71,7 @@ public class ProfileController {
             @Valid
             @RequestBody ProfileDto dto
     ) {
-        Long userId = user.getId();
+        Long userId = user.getUserId();
         profileService.updateProfile(userId, dto);
         return ResponseEntity.noContent().build();
     }
