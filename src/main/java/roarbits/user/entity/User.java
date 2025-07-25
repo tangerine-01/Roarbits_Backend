@@ -22,6 +22,7 @@ public class User implements UserDetails {
     private Long userId;
     private String email;
     private String password;
+    private String name;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name="user_roles", joinColumns=@JoinColumn(name="user_id"))
@@ -44,6 +45,9 @@ public class User implements UserDetails {
     @Override
     public String getUsername() {
         return email;
+    }
+    public Long getId() {
+        return userId;
     }
 
     @Override

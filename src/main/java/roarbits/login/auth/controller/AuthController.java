@@ -44,14 +44,12 @@ public class AuthController {
     }
 
 
-    // 로그인
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest loginRequest) {
         LoginResponse response = authService.login(loginRequest);
         return ResponseEntity.ok(response);
     }
 
-    // 로그아웃
     @PostMapping("/logout")
     public ApiResponse<Void> logout(@RequestHeader("Authorization") String accessTokenHeader) {
         String accessToken = accessTokenHeader.replace("Bearer ", "");
