@@ -10,7 +10,7 @@ import java.util.List;
 @Repository
 public interface TimeSlotRepository extends JpaRepository<TimeSlot, Long> {
     // 시간표 ID로 TimeSlot 목록 조회
-    List<TimeSlot> findByTimetable(Long timetableId);
+    List<TimeSlot> findByTimetable(Timetable timetableId);
 
     //시간표 전체 삭제 시, 타임슬롯도 함께 삭제
     void deleteByTimetable(Timetable timetable);
