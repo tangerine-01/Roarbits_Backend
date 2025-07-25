@@ -18,15 +18,11 @@ import roarbits.login.auth.jwt.JwtValidationFilter;
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final JwtTokenProvider jwtTokenProvider;
+    private final JwtValidationFilter jwtValidationFilter;
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public JwtValidationFilter jwtValidationFilter(JwtTokenProvider p) {
-        return new JwtValidationFilter(p);
     }
 
     @Bean
@@ -44,7 +40,11 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
-                                "/v3/api-docs/**"
+                                "/v3/api-docs",
+                                "/v3/api-docs/**",
+                                "/v3/api-docs/swagger-config",
+                                "/swagger-resources/**",
+                                "/webjars/**"
                         ).permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/signup").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
@@ -52,8 +52,9 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
 
+
                 .addFilterBefore(
-                        new JwtValidationFilter(jwtTokenProvider),
+                        jwtValidationFilter,
                         UsernamePasswordAuthenticationFilter.class
                 )
         ;
