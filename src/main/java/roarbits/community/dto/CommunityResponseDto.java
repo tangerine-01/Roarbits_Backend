@@ -1,0 +1,4 @@
+package roarbits.community.dto;
+
+public class CommunityResponseDto {
+}
