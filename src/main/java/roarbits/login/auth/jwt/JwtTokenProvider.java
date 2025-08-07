@@ -33,7 +33,6 @@ public class JwtTokenProvider {
         return null;
     }
 
-
     @Value("${jwt.access-token-expiration-ms}")
     private long accessTokenExpirationMs;
 

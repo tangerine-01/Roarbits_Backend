@@ -1,0 +1,46 @@
+[33md859c8f[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m pdfkdl
+[33mac0d595[m Merge remote-tracking branch 'origin/main'
+[33m50645ba[m 오류해결
+[33mf66defb[m user class controller 수정
+[33m6716b61[m gitginore 중복 수정
+[33m27acb0f[m user interest
+[33m7427f70[m save graduation requirement
+[33med3e8e7[m graduation 기능 구현 완료
+[33mb0f9c48[m dc
+[33m48a6951[m cc
+[33mff0d6b1[m dd
+[33maae4117[m dd
+[33m293ffb8[m Resolve conflicts and merge
+[33m9ddd35b[m c
+[33m9c05928[m delete yml
+[33ma1362c3[m 🔧 merge conflict resolved
+[33m69a2976[m 충돌 해결
+[33m03f351b[m move to main
+[33mdaae3f5[m[33m ([m[1;31morigin/feature/roarbitsbranch[m[33m)[m timetable complete
+[33md867c28[m dc
+[33mfe8dc0e[m 2025.07.22_tangerine
+[33m4df1dad[m 2025.07.22_tangerine
+[33m50bd4c6[m 2025.07.22_tangerine
+[33m934f6f2[m 2025.07.19_tangerine
+[33mc7bc989[m 2025.07.19_tangerine
+[33m0748063[m 2025.07.15_tangerine
+[33m90e72b0[m 시간표 dto, entity, service
+[33m9fdf7f5[m Update .gitignore and IDE config, remove Roarbits_Backend
+[33m3923e83[m Ignore build and .gradle folders
+[33mde884ba[m .gitignore 파일 수정
+[33me64d5fe[m[33m ([m[1;32mfeature/roarbitsbranch[m[33m)[m 삭제된 클래스 제거 및 코드 업데이트
+[33mfa60f66[m Merge remote-tracking branch 'origin/feature/roarbitsbranch' into feature/roarbitsbranch
+[33m246d28e[m dc
+[33mc717930[m Update application.properties
+[33mbb23288[m Resolve merge conflicts: remove .gradle artifacts
+[33m60a32d1[m Ignore .gradle directory and resolve conflicts
+[33me439b5e[m c
+[33m325fe10[m 2025.07.15_tangerine
+[33m4980e39[m Merge branch 'main' of https://github.com/tangerine-01/Roarbits_Backend
+[33m976882d[m c
+[33mcad5e5d[m c
+[33md26f587[m c
+[33m40ba865[m Merge branch 'main' of https://github.com/tangerine-01/Roarbits_Backend
+[33m0735f97[m Initial commit
+[33mea15bc7[m Update README.md
+[33m55964b8[m Initial commit
