@@ -16,20 +16,13 @@ public class JwtValidationFilter extends OncePerRequestFilter {
     private final JwtTokenProvider jwtTokenProvider;
 
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        String path = request.getRequestURI();
-        return path.startsWith("/api/auth/")
-                || path.startsWith("/swagger-ui")
-                || path.startsWith("/v3/api-docs");
-    }
-
-    @Override
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
         String bearer = request.getHeader("Authorization");
+
         if (StringUtils.hasText(bearer) && bearer.startsWith("Bearer ")) {
             String token = bearer.substring(7);
             if (jwtTokenProvider.validateToken(token)) {
