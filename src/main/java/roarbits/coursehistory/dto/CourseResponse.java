@@ -1,16 +1,17 @@
 package roarbits.coursehistory.dto;
 
 import lombok.*;
+import roarbits.coursehistory.dto.CourseEnums.Semester;
+import roarbits.coursehistory.dto.CourseEnums.RetakeType;
 
-@Getter @Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Getter @Builder @AllArgsConstructor @NoArgsConstructor
 public class CourseResponse {
     private Long id;
     private Long userId;
+    private Integer year;
+    private Semester semester;
     private String courseCode;
     private String courseTitle;
-    private int credit;
-    private String semester;
+    private Integer credit;
+    private RetakeType retake;
 }

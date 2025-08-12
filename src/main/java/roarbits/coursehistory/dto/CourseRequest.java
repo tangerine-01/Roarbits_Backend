@@ -1,14 +1,20 @@
 package roarbits.coursehistory.dto;
 import jakarta.validation.constraints.*;
 import lombok.*;
+import roarbits.coursehistory.dto.CourseEnums.Semester;
+import roarbits.coursehistory.dto.CourseEnums.RetakeType;
 
-@Getter @Setter
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class CourseRequest {
+    @NotNull @Min(2000) @Max(2100)
+    private Integer year;
+
     @NotNull
-    private Long userId;
+    private Semester semester;
 
     @NotBlank
     private String courseCode;
@@ -19,6 +25,6 @@ public class CourseRequest {
     @Min(1) @Max(6)
     private int credit;
 
-    @NotBlank
-    private String semester;
+    @NotNull
+    private RetakeType retake;
 }

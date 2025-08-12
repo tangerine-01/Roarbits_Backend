@@ -53,20 +53,25 @@ public class AuthService {
 
 
     @Transactional
-    public LoginResponse login(LoginRequest loginRequest) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        loginRequest.getEmail(), loginRequest.getPassword())
-        );
+    public LoginResponse login(LoginRequest req) {
+        Authentication auth;
+        try {
+            auth = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(req.getEmail(), req.getPassword())
+            );
+            SecurityContextHolder.getContext().setAuthentication(auth);
+        } catch (org.springframework.security.core.AuthenticationException e) {
+            throw new org.springframework.security.authentication.BadCredentialsException("이메일/비번 확인");
+        }
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        User user = userRepository.findByEmail(req.getEmail())
+                .orElseThrow(() -> new org.springframework.security.authentication.BadCredentialsException("이메일/비번 확인"));
 
-        User user = (User) authentication.getPrincipal();
-
-        String accessToken = jwtTokenProvider.generateAccessToken(authentication);
+        String accessToken = jwtTokenProvider.generateAccessToken(auth);
         String refreshTokenValue = jwtTokenProvider.generateRefreshToken();
 
         refreshTokenRepository.findByUser(user).ifPresent(refreshTokenRepository::delete);
+
         RefreshToken newRefreshToken = RefreshToken.builder()
                 .token(refreshTokenValue)
                 .user(user)
@@ -76,6 +81,7 @@ public class AuthService {
 
         return new LoginResponse(accessToken, refreshTokenValue);
     }
+
 
     @Transactional
     public TokenRefreshResponse reissueToken(TokenRefreshRequest request) {
