@@ -2,6 +2,8 @@ package roarbits.community.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import roarbits.community.dto.CommunityRequestDto;
@@ -48,5 +50,14 @@ public class CommunityPostController {
         return ResponseEntity.noContent().build();
     }
 
-
+    // 위치 기반 탐색
+    @GetMapping("/nearby")
+    public ResponseEntity<Page<CommunityResponseDto.Post>> findNearby(
+            @RequestParam double lat,
+            @RequestParam double lng,
+            @RequestParam double radiusMeters,
+            Pageable pageable) {
+        Page<CommunityResponseDto.Post> page = communityService.findNearby(lat, lng, radiusMeters, pageable);
+        return ResponseEntity.ok(page);
+    }
 }

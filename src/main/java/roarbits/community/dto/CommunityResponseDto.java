@@ -14,6 +14,12 @@ public class CommunityResponseDto {
         private String title;
         private String content;
         private Long authorId;
+
+        private Double lat;
+        private Double lng;
+        private LocalDateTime meetTime;
+        private Integer maxParticipants;
+
         private long commentCount;
         private boolean deleted;
         private LocalDateTime createdAt;
@@ -26,6 +32,10 @@ public class CommunityResponseDto {
                     .title(p.getTitle())
                     .content(p.getContent())
                     .authorId(p.getWriter().getId())
+                    .lat(p.getLat())
+                    .lng(p.getLng())
+                    .meetTime(p.getMeetTime())
+                    .maxParticipants(p.getMaxParticipants())
                     .commentCount(commentCount)
                     .deleted(p.getIsDeleted())
                     .createdAt(p.getCreatedAt())
