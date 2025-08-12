@@ -35,10 +35,10 @@ public class CommunityPost {
     private PostType type;
 
     // 위치, 시간, 모집 인원
-    @Column(precision = 10, scale = 7)
+    @Column
     private Double lat;
 
-    @Column(precision = 10, scale = 7)
+    @Column
     private Double lng;
 
     private LocalDateTime meetTime;
