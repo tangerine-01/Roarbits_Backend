@@ -18,7 +18,7 @@ import java.util.ArrayList;
 public class AiRecommendationService {
     private final WebClient geminiWebClient;
 
-    @Value("${gemini.api.key}")
+    @Value("${gemini.api-key}")
     private String geminiApiKey;
 
     public List<String> generateRecommendation(String scheduleJson) {

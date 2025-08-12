@@ -22,6 +22,8 @@ public class CommunityPost {
     @Column(length = 1000)
     private String content;
 
+    private boolean isDeleted = false;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User writer;
@@ -29,8 +31,18 @@ public class CommunityPost {
     @Enumerated(EnumType.STRING)
     private PostType type;
 
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    private LocalDateTime updatedAt = LocalDateTime.now();
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CommunityComment> comments;
+
+    public boolean getIsDeleted() {
+        return isDeleted;
+    }
+
+    public void setIsDeleted(boolean Deleted) {
+        isDeleted = Deleted;
+    }
 }

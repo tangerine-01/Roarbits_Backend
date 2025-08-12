@@ -27,5 +27,15 @@ public class CommunityComment {
     @JoinColumn(name = "post_id")
     private CommunityPost post;
 
-    private LocalDateTime createdAt;
+    private boolean isDeleted = false;
+
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    public boolean getIsDeleted() {
+        return isDeleted;
+    }
+
+    public void setIsDeleted(boolean deleted) {
+        isDeleted = deleted;
+    }
 }
