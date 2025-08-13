@@ -1,8 +1,11 @@
 package roarbits.notification.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import roarbits.notification.dto.UserInterestRequestDto;
 import roarbits.notification.dto.UserInterestResponseDto;
@@ -20,11 +23,11 @@ public class UserInterestService {
     private final UserInterestRepository repository;
 
     // 관심 알림 설정 등록 또는 수정
-    public UserInterestResponseDto saveOrUpdateInterest(UserInterestRequestDto dto) {
+    public UserInterestResponseDto saveOrUpdateInterest(Long userId, UserInterestRequestDto dto) {
         UserInterest entity = repository.findByUserIdAndInterestTypeAndInterestTargetId(
-                        dto.getUserId(), dto.getInterestType(), dto.getInterestTargetId())
-                .orElse(UserInterest.builder()
-                        .userId(dto.getUserId())
+                        userId, dto.getInterestType(), dto.getInterestTargetId())
+                .orElseGet(() -> UserInterest.builder()
+                        .userId(userId)
                         .interestType(dto.getInterestType())
                         .interestTargetId(dto.getInterestTargetId())
                         .build());
@@ -36,14 +39,18 @@ public class UserInterestService {
     // 사용자 관심 목록 조회
     @Transactional(readOnly = true)
     public List<UserInterestResponseDto> getUserInterests(Long userId) {
-        List<UserInterest> list = repository.findByUserId(userId);
-        return list.stream()
+        return repository.findByUserId(userId).stream()
                 .map(UserInterestResponseDto::fromEntity)
                 .collect(Collectors.toList());
     }
 
     // 관심 알림 삭제
-    public void deleteInterest(Long id) {
-        repository.deleteById(id);
+    public void deleteInterest(Long userId, Long id) {
+        UserInterest e = repository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "즐겨찾기가 존재하지 않습니다."));
+        if (!e.getUserId().equals(userId)) {
+            throw new AccessDeniedException("해당 즐겨찾기를 삭제할 권한이 없습니다.");
+        }
+        repository.delete(e);
     }
 }

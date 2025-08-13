@@ -2,8 +2,6 @@ package roarbits.notification.dto;
 
 import lombok.*;
 
-import java.util.List;
-
 @Getter
 @AllArgsConstructor
 @Builder
