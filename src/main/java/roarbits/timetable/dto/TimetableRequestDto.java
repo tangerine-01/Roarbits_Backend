@@ -1,6 +1,8 @@
 package roarbits.timetable.dto;
 
 import lombok.*;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
 
 import java.util.List;
 
@@ -10,13 +12,26 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class TimetableRequestDto {
-    private Long userId;
+    @PositiveOrZero
     private Integer preferCredit;
+
+    @NotBlank
     private String preferTime;
+
+    @PositiveOrZero
     private Integer morningClassNum;
+
+    @PositiveOrZero
     private Integer freePeriodNum;
+
     private String essentialCourse;
+
+    @DecimalMin(value = "0.0", inclusive = true)
+    @DecimalMax(value = "1.0", inclusive = true)
     private Double graduationRate;
 
-    private List<TimeSlotDto> timeSlots; //시간표에 포함된 과목들
+    @NotNull
+    @Size(min = 0)
+    @Builder.Default
+    private List<@Valid TimeSlotDto> timeSlots = List.of(); //시간표에 포함된 과목들
 }

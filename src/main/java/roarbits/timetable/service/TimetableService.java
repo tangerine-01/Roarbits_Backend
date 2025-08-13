@@ -25,8 +25,8 @@ public class TimetableService {
     private final TimeSlotRepository timeSlotRepository;
 
     // 시간표 생성
-    public TimetableResponseDto createTimetable(TimetableRequestDto dto) {
-        User user = userRepository.findById(dto.getUserId())
+    public TimetableResponseDto createTimetable(Long userId, TimetableRequestDto dto) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다.(사용자 ID 잘못됨)"));
 
         Timetable timetable = Timetable.builder()
@@ -50,31 +50,31 @@ public class TimetableService {
                     .startTime(LocalTime.parse(slotDto.getStartTime()))
                     .endTime(LocalTime.parse(slotDto.getEndTime()))
                     .build();
-        }).collect(Collectors.toList());
+        }).toList();
 
         timetable.setTimeSlots(timeSlots);
-        Timetable saved = timetableRepository.save(timetable);
-
-        return toResponseDto(saved);
+        return toResponseDto(timetableRepository.save(timetable));
     }
 
     // 시간표 단일 조회
-    public TimetableResponseDto getTimetable(Long timetableId) {
-        Timetable timetable = timetableRepository.findById(timetableId)
+    @Transactional
+    public TimetableResponseDto getTimetable(Long userId, Long timetableId) {
+        Timetable t = timetableRepository.findByTimetableIdAndUser_UserId(timetableId, userId)
                 .orElseThrow(() -> new IllegalArgumentException("시간표를 찾을 수 없습니다."));
-        return toResponseDto(timetable);
+        return toResponseDto(t);
     }
 
     // 사용자별 시간표 조회
+    @Transactional
     public List<TimetableResponseDto> getTimetablesByUser(Long userId) {
-        return timetableRepository.findByUserId(userId).stream()
+        return timetableRepository.findAllByUser_UserId(userId).stream()
                 .map(this::toResponseDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     // 시간표 수정
-    public TimetableResponseDto updateTimetable(Long timetableId, TimetableRequestDto dto) {
-        Timetable timetable = timetableRepository.findById(timetableId)
+    public TimetableResponseDto updateTimetable(Long userId, Long timetableId, TimetableRequestDto dto) {
+        Timetable timetable = timetableRepository.findByTimetableIdAndUser_UserId(timetableId, userId)
                 .orElseThrow(() -> new IllegalArgumentException("시간표를 찾을 수 없습니다."));
 
         timetable.setPreferCredit(dto.getPreferCredit());
@@ -98,17 +98,16 @@ public class TimetableService {
                     .startTime(LocalTime.parse(slotDto.getStartTime()))
                     .endTime(LocalTime.parse(slotDto.getEndTime()))
                     .build();
-        }).collect(Collectors.toList());
+        }).toList();
 
         timetable.setTimeSlots(updatedSlots);
         return toResponseDto(timetable);
     }
 
     // 시간표 삭제
-    public void deleteTimetable(Long timetableId) {
-        Timetable timetable = timetableRepository.findById(timetableId)
-                .orElseThrow(() -> new IllegalArgumentException("시간표를 찾을 수 없습니다."));
-        timetableRepository.delete(timetable);
+    public void deleteTimetable(Long userId, Long timetableId) {
+        long n = timetableRepository.deleteByTimetableIdAndUser_UserId(timetableId, userId);
+        if (n == 0) throw new IllegalArgumentException("권한이 없거나 존재하지 않는 시간표입니다.");
     }
 
     // 엔티티 -> DTO 변환
@@ -127,7 +126,7 @@ public class TimetableService {
                     .endTime(slot.getEndTime().toString())
                     .day(slot.getDay())
                     .build();
-        }).collect(Collectors.toList());
+        }).toList();
 
         return TimetableResponseDto.builder()
                 .timetableId(timetable.getTimetableId())
