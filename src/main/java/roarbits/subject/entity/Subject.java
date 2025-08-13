@@ -18,11 +18,13 @@ public class Subject {
     private String subjectId;
 
     private String name;
-    private String code;
     private String professor;
-    private String location;
+    private String classroom;
     private String description;
-    private String category;
+    private String courseType;
+    private String discipline;
+
 
     private Integer credit;
+    private Integer grade;
 }

@@ -12,14 +12,16 @@ public class SubjectDto {
     private Long id;
     private String name;
     private String description;
-    private String category;
+    private String courseType;
+    private String discipline;
 
     public static SubjectDto from(Subject subject) {
         return new SubjectDto(
                 subject.getId(),
                 subject.getName(),
                 subject.getDescription(),
-                subject.getCategory()
+                subject.getCourseType(),
+                subject.getDiscipline()
         );
     }
 }
