@@ -1,7 +1,6 @@
 package roarbits.coursehistory.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import roarbits.coursehistory.dto.CourseRequest;
@@ -50,8 +49,8 @@ public class CourseService {
     }
 
     @Transactional
-    public void delete(Long id, Long userId) {
-        CourseEntity e = repo.findById(id)
+    public void delete(Long userId, Long courseId) {
+        CourseEntity e = repo.findByIdAndUserId(courseId, userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 수강이력입니다."));
         repo.delete(e);
     }
