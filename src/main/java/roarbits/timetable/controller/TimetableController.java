@@ -15,6 +15,9 @@ import lombok.RequiredArgsConstructor;
 import java.util.List;
 import roarbits.timetable.service.TimetableService;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@Tag(name = "Timetable", description = "시간표 관리 API")
 @RestController
 @RequestMapping("/api/timetables")
 @RequiredArgsConstructor
@@ -23,7 +26,10 @@ public class TimetableController {
 
     // 시간표 전체 조회 (/me 기준)
     @GetMapping("/me")
-    @Operation(security = { @SecurityRequirement(name = "Authorization")})
+    @Operation(
+            summary = "시간표 전체 조회",
+            description = "현재 로그인된 사용자의 모든 시간표를 조회합니다.",
+            security = { @SecurityRequirement(name = "Authorization")})
     public ResponseEntity<List<TimetableResponseDto>> getAllTimetables(
             @Parameter(hidden = true)
             @AuthenticationPrincipal(expression = "id") Long userId
@@ -33,11 +39,15 @@ public class TimetableController {
 
     // 시간표 생성
     @PostMapping
-    @Operation(security = {@SecurityRequirement(name = "Authorization")})
+    @Operation(
+            summary = "시간표 생성",
+            description = "현재 로그인된 사용자의 시간표를 생성합니다.",
+            security = {@SecurityRequirement(name = "Authorization")})
     public ResponseEntity<TimetableResponseDto> createTimetable(
-            @Valid @RequestBody TimetableRequestDto requestDto,
             @Parameter(hidden = true)
-            @AuthenticationPrincipal(expression = "id") Long userId
+            @AuthenticationPrincipal(expression = "id") Long userId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "생성할 시간표 정보")
+            @Valid @org.springframework.web.bind.annotation.RequestBody TimetableRequestDto requestDto
     ){
         var created = timetableService.createTimetable(userId, requestDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
@@ -45,12 +55,16 @@ public class TimetableController {
 
     // 시간표 수정
     @PutMapping("/{timetableId}")
-    @Operation(security = { @SecurityRequirement(name = "Authorization")})
+    @Operation(
+            summary = "시간표 수정",
+            description = "현재 로그인된 사용자의 시간표를 수정합니다.",
+            security = { @SecurityRequirement(name = "Authorization")})
     public ResponseEntity<TimetableResponseDto> updateTimetable(
-            @PathVariable Long timetableId,
-            @RequestBody TimetableRequestDto requestDto,
             @Parameter(hidden = true)
-            @AuthenticationPrincipal(expression = "id") Long userId
+            @AuthenticationPrincipal(expression = "id") Long userId,
+            @Parameter(description = "수정할 시간표 ID") @PathVariable Long timetableId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "수정할 시간표 정보")
+            @Valid @org.springframework.web.bind.annotation.RequestBody TimetableRequestDto requestDto
     ) {
         var updated = timetableService.updateTimetable(userId, timetableId, requestDto);
         return ResponseEntity.ok(updated);
@@ -58,11 +72,14 @@ public class TimetableController {
 
     // 시간표 삭제
     @DeleteMapping("/{timetableId}")
-    @Operation(security = { @SecurityRequirement(name = "Authorization")})
+    @Operation(
+            summary = "시간표 삭제",
+            description = "현재 로그인된 사용자의 시간표를 삭제합니다.",
+            security = { @SecurityRequirement(name = "Authorization")})
     public ResponseEntity<Void> deleteTimetable(
-            @PathVariable Long timetableId,
             @Parameter(hidden = true)
-            @AuthenticationPrincipal(expression = "id") Long userId
+            @AuthenticationPrincipal(expression = "id") Long userId,
+            @Parameter(description = "삭제할 시간표 ID") @PathVariable Long timetableId
     ) {
         timetableService.deleteTimetable(userId, timetableId);
         return ResponseEntity.noContent().build();
