@@ -30,7 +30,6 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    // 필요시 CORS 열어두기
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration cfg = new CorsConfiguration();
@@ -62,13 +61,11 @@ public class SecurityConfig {
                         // 프리플라이트
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // 공개 엔드포인트(필터 제외 패턴과 맞춤)
                         .requestMatchers("/","/error","/favicon.ico").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/swagger-ui.html","/swagger-ui/**","/v3/api-docs","/v3/api-docs/**").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
 
-                        // 나머지 /api/** 는 인증 필요
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().authenticated()
                 )
@@ -79,7 +76,6 @@ public class SecurityConfig {
                     res.getWriter().write("{\"message\":\"Unauthorized\"}");
                 }));
 
-        // ★ 순환참조 방지: Bean 만들지 말고 new 로 바로 추가
         http.addFilterBefore(
                 new JwtValidationFilter(jwtTokenProvider),
                 UsernamePasswordAuthenticationFilter.class
