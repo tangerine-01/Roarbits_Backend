@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+
 import java.util.List;
 
 import roarbits.notification.dto.UserInterestRequestDto;
@@ -52,8 +53,8 @@ public class UserInterestController {
     public ResponseEntity<List<UserInterestResponseDto>> getUserInterests(
             @Parameter(hidden = true)
             @AuthenticationPrincipal(expression = "id") Long userId){
-        List<UserInterestResponseDto> interests = userInterestService.getUserInterests(userId);
-        return ResponseEntity.ok(interests);
+        List<UserInterestResponseDto> list = userInterestService.getUserInterests(userId);
+        return ResponseEntity.ok(list);
     }
 
     // 관심 알림 삭제
