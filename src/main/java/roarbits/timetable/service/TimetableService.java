@@ -130,7 +130,7 @@ public class TimetableService {
 
         return TimetableResponseDto.builder()
                 .timetableId(timetable.getTimetableId())
-                .userId(timetable.getUser().getUserId())
+                .userId(timetable.getUser().getId())
                 .preferCredit(timetable.getPreferCredit())
                 .preferTime(timetable.getPreferTime())
                 .morningClassNum(timetable.getMorningClassNum())

@@ -1,6 +1,7 @@
 package roarbits.user.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RestController;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +13,7 @@ import roarbits.user.service.ProfileService;
 import roarbits.user.service.UserService;
 import roarbits.user.entity.User;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -21,39 +23,65 @@ public class ProfileController {
     private final ProfileService profileService;
     private final UserService    userService;
 
-    @PostMapping("/step1")
-    public ResponseEntity<Void> step1(
-            @RequestParam Long userId,
+    @PostMapping(
+            value = "/step1",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<Map<String, Object>> step1(
+            @AuthenticationPrincipal User user,
             @Valid @RequestBody ProfileDto dto
     ) {
+        Long userId = user.getId();
         profileService.saveStep1(userId, dto.getUniversity(), dto.getMajor());
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("status", "ok", "step", 1, "message", "profile step1 saved"));
     }
 
-    @PostMapping("/step2")
-    public ResponseEntity<Void> step2(
-            @RequestParam Long userId,
+    @PostMapping(
+            value = "/step2",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<Map<String, Object>> step2(
+            @AuthenticationPrincipal User user,
             @Valid @RequestBody ProfileDto dto
     ) {
+        Long userId = user.getId();
         profileService.saveStep2(userId, dto.getEnrollmentYear());
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("status", "ok", "step",2, "message", "profile step2 saved"));
     }
 
-    @PostMapping("/step3")
-    public ResponseEntity<Void> step3(
-            @RequestParam Long userId,
+    @PostMapping(
+            value = "/step3",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<Map<String, Object>> step3(
+            @AuthenticationPrincipal User user,
             @Valid @RequestBody ProfileDto dto
     ) {
+        Long userId = user.getId();
         profileService.saveStep3(userId, dto.getGraduationType());
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("status", "ok", "step",3, "message", "profile step2 saved"));
     }
 
-    @PostMapping("/step4")
-    public ResponseEntity<Void> step4(
-            @RequestParam Long userId,
-            @Valid
-            @RequestBody ProfileDto dto
+    @PostMapping(
+            value = "/step4",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<Map<String, Object>> step4(
+            @AuthenticationPrincipal User user,
+            @Valid @RequestBody ProfileDto dto
     ) {
+        Long userId = user.getId();
+
         List<CompletedCourse> courses = dto.getCompletedCourses().stream()
                 .map(d -> CompletedCourse.builder()
                         .courseCode(d.getCourseCode())
@@ -62,16 +90,19 @@ public class ProfileController {
                 .collect(Collectors.toList());
 
         profileService.saveStep4(userId, courses);
-        return ResponseEntity.ok().build();
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("status","ok","step",4,"count", courses.size(), "message","profile step4 saved"));
     }
 
-    @PutMapping
+    @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> updateProfile(
             @AuthenticationPrincipal User user,
             @Valid
             @RequestBody ProfileDto dto
     ) {
-        Long userId = user.getUserId();
+        Long userId = user.getId();
         profileService.updateProfile(userId, dto);
         return ResponseEntity.noContent().build();
     }

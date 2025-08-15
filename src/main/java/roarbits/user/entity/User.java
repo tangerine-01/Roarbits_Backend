@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import roarbits.user.entity.Profile;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Getter
@@ -19,10 +20,11 @@ import roarbits.user.entity.Profile;
 public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long userId;
+    @Column(name = "user_id")
+    private Long Id;
     private String email;
 
-    @com.fasterxml.jackson.annotation.JsonIgnore
+    @JsonIgnore
     @Column(nullable = false)
     private String password;
 
@@ -53,7 +55,7 @@ public class User implements UserDetails {
         return email;
     }
     public Long getId() {
-        return userId;
+        return Id;
     }
 
     @Override

@@ -33,7 +33,7 @@ public class UserService {
         User saved = userRepository.save(user);
 
         return SignUpResponse.builder()
-                .id(saved.getUserId())
+                .id(saved.getId())
                 .email(saved.getEmail())
                 .build();
     }
@@ -41,7 +41,7 @@ public class UserService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
         return UserResponse.builder()
-                .id(user.getUserId())
+                .id(user.getId())
                 .email(user.getEmail())
                 .build();
     }
