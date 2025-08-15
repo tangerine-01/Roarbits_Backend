@@ -4,6 +4,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import roarbits.user.entity.User;
 
 import roarbits.global.api.ApiResponse;
 import roarbits.global.api.SuccessCode;
@@ -51,16 +54,10 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ApiResponse<Void> logout(@RequestHeader("Authorization") String accessTokenHeader) {
-        String accessToken = accessTokenHeader.replace("Bearer ", "");
-
-        String email = jwtTokenProvider.getUsernameFromToken(accessToken);
-
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("해당 사용자를 찾을 수 없습니다."));
-
+    public ApiResponse<Void> logout() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User user = (User) auth.getPrincipal();
         refreshTokenRepository.deleteByUser(user);
-
         return ApiResponse.onSuccess(SuccessCode.USER_LOGOUT_SUCCESS, null);
     }
 

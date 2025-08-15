@@ -5,16 +5,13 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
+import roarbits.user.entity.User;
+import roarbits.user.repository.UserRepository;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 public class JwtTokenProvider {
@@ -22,10 +19,10 @@ public class JwtTokenProvider {
     private final SecretKey key;
     private final long accessTokenExpirationMs;
     private final long refreshTokenExpirationMs;
-    private final UserDetailsService userDetailsService;
+    private final UserRepository userRepository;
 
     public JwtTokenProvider(
-            UserDetailsService userDetailsService,
+            UserRepository userRepository,
             @Value("${jwt.secret}") String secret,
             @Value("${jwt.access-token-expiration-ms:3600000}") long accessTokenExpirationMs,
             @Value("${jwt.refresh-token-expiration-ms:1209600000}") long refreshTokenExpirationMs
@@ -33,7 +30,7 @@ public class JwtTokenProvider {
         if (secret == null || secret.trim().length() < 32) {
             throw new IllegalStateException("jwt.secret은 최소 32자 이상이어야 해요.");
         }
-        this.userDetailsService = userDetailsService;
+        this.userRepository = userRepository;
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.accessTokenExpirationMs = accessTokenExpirationMs;
         this.refreshTokenExpirationMs = refreshTokenExpirationMs;
@@ -44,26 +41,19 @@ public class JwtTokenProvider {
         return (bearer != null && bearer.startsWith("Bearer ")) ? bearer.substring(7) : null;
     }
 
-    /** Access Token 생성 */
     public String generateAccessToken(Authentication authentication) {
-        UserDetails principal = (UserDetails) authentication.getPrincipal();
-        List<String> roles = principal.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.toList());
-
+        User principal = (User) authentication.getPrincipal();
         Date now = new Date();
         Date exp = new Date(now.getTime() + accessTokenExpirationMs);
 
         return Jwts.builder()
-                .subject(principal.getUsername())
-                .claim("roles", roles)
+                .subject(String.valueOf(principal.getId()))
                 .issuedAt(now)
                 .expiration(exp)
                 .signWith(key)
                 .compact();
     }
 
-    /** Refresh Token 생성 */
     public String generateRefreshToken() {
         Date now = new Date();
         Date exp = new Date(now.getTime() + refreshTokenExpirationMs);
@@ -75,13 +65,15 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    public String getUsernameFromToken(String token) {
-        return Jwts.parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .getSubject();
+    public Long getUserIdFromToken(String token) {
+        return Long.valueOf(
+                Jwts.parser()
+                        .verifyWith(key)
+                        .build()
+                        .parseSignedClaims(token)
+                        .getPayload()
+                        .getSubject()
+        );
     }
 
     public boolean validateToken(String token) {
@@ -94,8 +86,9 @@ public class JwtTokenProvider {
     }
 
     public Authentication getAuthentication(String token) {
-        String username = getUsernameFromToken(token);
-        UserDetails user = userDetailsService.loadUserByUsername(username);
+        Long userId = getUserIdFromToken(token);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
         return new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
     }
 }

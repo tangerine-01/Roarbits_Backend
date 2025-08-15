@@ -44,7 +44,7 @@ public class JwtValidationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain chain) throws ServletException, IOException {
 
-        String token = resolveToken(request);
+        String token = jwtTokenProvider.resolveToken(request); // 수정: provider의 resolveToken 사용
 
         if (!StringUtils.hasText(token)) {
             chain.doFilter(request, response);
@@ -57,7 +57,7 @@ public class JwtValidationFilter extends OncePerRequestFilter {
                 return;
             }
 
-            Authentication auth = jwtTokenProvider.getAuthentication(token);
+            Authentication auth = jwtTokenProvider.getAuthentication(token); // userId 기반 인증 객체 생성
             SecurityContextHolder.getContext().setAuthentication(auth);
             chain.doFilter(request, response);
 
@@ -67,7 +67,7 @@ public class JwtValidationFilter extends OncePerRequestFilter {
         }
     }
 
-    private String resolveToken(HttpServletRequest request) {
+    private String resolveToken(HttpServletRequest request) { // 기존 메서드 유지 (안 쓰더라도)
         String h = request.getHeader("Authorization");
         if (!StringUtils.hasText(h)) return null;
         if (h.startsWith("Bearer ")) return h.substring(7).trim();
