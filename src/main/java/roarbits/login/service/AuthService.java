@@ -2,6 +2,8 @@ package roarbits.login.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,6 +22,7 @@ import roarbits.user.dto.SignUpResponse;
 import roarbits.user.entity.User;
 import roarbits.user.repository.UserRepository;
 import roarbits.login.mapper.AuthMapper;
+import roarbits.login.exception.DuplicateEmailException;
 
 import java.time.LocalDateTime;
 
@@ -37,18 +40,22 @@ public class AuthService {
 
     @Transactional
     public SignUpResponse signUp(SignUpRequest req) {
-        if (userRepository.findByEmail(req.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("이미 가입된 이메일입니다.");
+        if (userRepository.existsByEmail(req.getEmail())) {
+            throw new DuplicateEmailException(req.getEmail());
         }
+
+        try {
             User newUser = userRepository.save(
                     User.builder()
-                        .email(req.getEmail())
-                        .password(passwordEncoder.encode(req.getPassword()))
-                        .build()
+                            .email(req.getEmail())
+                            .password(passwordEncoder.encode(req.getPassword()))
+                            .name(req.getName())
+                            .build()
             );
             return authMapper.toSignUpResponse(newUser);
-
-
+        } catch (DataIntegrityViolationException e) {
+            throw new DuplicateEmailException(req.getEmail());
+        }
     }
 
 
@@ -65,7 +72,7 @@ public class AuthService {
         }
 
         User user = userRepository.findByEmail(req.getEmail())
-                .orElseThrow(() -> new org.springframework.security.authentication.BadCredentialsException("이메일/비번 확인"));
+                .orElseThrow(() -> new BadCredentialsException("이메일/비번 확인"));
 
         String accessToken = jwtTokenProvider.generateAccessToken(auth);
         String refreshTokenValue = jwtTokenProvider.generateRefreshToken();

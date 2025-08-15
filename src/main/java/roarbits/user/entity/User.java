@@ -28,11 +28,16 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String password;
 
+    @Column(nullable = false, length = 100)
     private String name;
 
     @Builder.Default
     @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name="user_roles", joinColumns=@JoinColumn(name="user_id"))
+    @CollectionTable(
+            name="user_roles",
+            joinColumns=@JoinColumn(name="user_id"),
+            uniqueConstraints = @UniqueConstraint(name = "uk_user_roles", columnNames = {"user_id","role"})
+    )
     @Column(name="role", nullable = false)
     private List<String> roles = List.of("ROLE_USER");
 

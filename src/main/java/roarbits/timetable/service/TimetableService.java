@@ -59,22 +59,22 @@ public class TimetableService {
     // 시간표 단일 조회
     @Transactional
     public TimetableResponseDto getTimetable(Long userId, Long timetableId) {
-        Timetable t = timetableRepository.findByTimetableIdAndUser_UserId(timetableId, userId)
+        Timetable t = timetableRepository.findByTimetableIdAndUser_Id(timetableId, userId)
                 .orElseThrow(() -> new IllegalArgumentException("시간표를 찾을 수 없습니다."));
         return toResponseDto(t);
     }
 
     // 사용자별 시간표 조회
     @Transactional
-    public List<TimetableResponseDto> getTimetablesByUser(Long userId) {
-        return timetableRepository.findAllByUser_UserId(userId).stream()
+    public List<TimetableResponseDto> getTimetablesByUser(Long Id) {
+        return timetableRepository.findAllByUser_Id(Id).stream()
                 .map(this::toResponseDto)
                 .toList();
     }
 
     // 시간표 수정
     public TimetableResponseDto updateTimetable(Long userId, Long timetableId, TimetableRequestDto dto) {
-        Timetable timetable = timetableRepository.findByTimetableIdAndUser_UserId(timetableId, userId)
+        Timetable timetable = timetableRepository.findByTimetableIdAndUser_Id(timetableId, userId)
                 .orElseThrow(() -> new IllegalArgumentException("시간표를 찾을 수 없습니다."));
 
         timetable.setPreferCredit(dto.getPreferCredit());
@@ -106,7 +106,7 @@ public class TimetableService {
 
     // 시간표 삭제
     public void deleteTimetable(Long userId, Long timetableId) {
-        long n = timetableRepository.deleteByTimetableIdAndUser_UserId(timetableId, userId);
+        long n = timetableRepository.deleteByTimetableIdAndUser_Id(timetableId, userId);
         if (n == 0) throw new IllegalArgumentException("권한이 없거나 존재하지 않는 시간표입니다.");
     }
 
