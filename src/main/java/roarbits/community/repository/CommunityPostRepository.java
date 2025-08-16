@@ -12,6 +12,12 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, Lo
     Page<CommunityPost> findAllByIsDeletedFalse(Pageable pageable);
     Optional<CommunityPost> findByIdAndIsDeletedFalse(Long postId);
 
+    boolean existsByIdAndIsDeletedFalse(Long id, Long userId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE CommunityPost p SET p.isDeleted = true WHERE p.id = :postid AND (p.writer) = :userId")
+    int softDeleteByIdAndWriter_Id(@Param("postid") Long id, @Param("userId") Long userId);
+
     // 반경 검색(미터단위)
     @Query(value = """
     SELECT * 

@@ -22,27 +22,42 @@ public class CommunityCommentController {
 
     // 댓글 생성
     @PostMapping
+    @Operation(
+            summary = "댓글 생성",
+            description = "게시글에 댓글을 작성합니다.",
+            security = { @SecurityRequirement(name = "Authorization") })
     public ResponseEntity<CommunityResponseDto.Comment> createComment(
-            @RequestParam Long writerId,
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal(expression = "id") Long userId,
             @Valid @RequestBody CommunityRequestDto.CreateComment req) {
-        return ResponseEntity.ok(service.createComment(writerId, req));
+        return ResponseEntity.ok(service.createComment(userId, req));
     }
 
     // 댓글 수정
     @PutMapping("/{commentId}")
+    @Operation(
+            summary = "댓글 수정",
+            description = "작성한 댓글을 수정합니다.",
+            security = { @SecurityRequirement(name = "Authorization") })
     public ResponseEntity<CommunityResponseDto.Comment> updateComment(
             @PathVariable Long commentId,
-            @RequestParam Long writerId,
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal(expression = "id") Long userId,
             @Valid @RequestBody CommunityRequestDto.UpdateComment req) {
-        return ResponseEntity.ok(service.updateComment(commentId, writerId, req));
+        return ResponseEntity.ok(service.updateComment(commentId, userId, req));
     }
 
     // 댓글 삭제
     @DeleteMapping("/{commentId}")
+    @Operation(
+            summary = "댓글 삭제",
+            description = "작성한 댓글을 삭제합니다.",
+            security = { @SecurityRequirement(name = "Authorization") })
     public ResponseEntity<Void> deleteComment(
             @PathVariable Long commentId,
-            @RequestParam Long writerId) {
-        service.deleteComment(commentId, writerId);
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal(expression = "id") Long userId) {
+        service.deleteComment(commentId, userId);
         return ResponseEntity.noContent().build();
     }
 }

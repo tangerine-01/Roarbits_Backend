@@ -1,8 +1,7 @@
 package roarbits.community.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.validation.constraints.*;
 import lombok.*;
 import roarbits.community.entity.PostType;
 
@@ -16,9 +15,17 @@ public class CommunityRequestDto {
         @NotNull private PostType type;
 
         // 위치, 시간, 모집 인원
+        @DecimalMin(value = "-90.0")
+        @DecimalMax(value = "90.0")
         private Double lat;
+
+        @DecimalMin(value = "-180.0")
+        @DecimalMax(value = "180.0")
         private Double lng;
+
+        @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss", timezone = "Asia/Seoul")
         private LocalDateTime meetTime;
+
         private Integer maxParticipants;
     }
 
@@ -32,7 +39,7 @@ public class CommunityRequestDto {
         private Double lat;
         private Double lng;
         private LocalDateTime meetTime;
-        private Integer maxParticipants;
+        @Positive private Integer maxParticipants;
     }
 
     @Getter @Setter @NoArgsConstructor

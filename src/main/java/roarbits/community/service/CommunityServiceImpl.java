@@ -3,6 +3,7 @@ package roarbits.community.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import roarbits.community.dto.CommunityRequestDto;
@@ -18,7 +19,7 @@ import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 public class CommunityServiceImpl implements CommunityService {
 
     private final CommunityPostRepository postRepo;
@@ -27,8 +28,9 @@ public class CommunityServiceImpl implements CommunityService {
 
     // Post
     @Override
-    public CommunityResponseDto.Post createPost(Long writerId, CommunityRequestDto.CreatePost req) {
-        User writer = userRepo.findById(writerId)
+    @Transactional
+    public CommunityResponseDto.Post createPost(Long userId, CommunityRequestDto.CreatePost req) {
+        User writer = userRepo.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("작성자 정보를 찾을 수 없습니다."));
 
         CommunityPost post = CommunityPost.builder()
@@ -58,6 +60,7 @@ public class CommunityServiceImpl implements CommunityService {
     }
 
     @Override
+    @Transactional
     public CommunityResponseDto.Post updatePost(Long postId, Long writerId, CommunityRequestDto.UpdatePost req) {
         CommunityPost post = postRepo.findByIdAndIsDeletedFalse(postId)
                 .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
@@ -81,18 +84,11 @@ public class CommunityServiceImpl implements CommunityService {
     }
 
     @Override
-    public void deletePost(Long postId, Long writerId) {
-        CommunityPost post = postRepo.findByIdAndIsDeletedFalse(postId)
-                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
-
-        //작성자 확인
-        if (post.getWriter() == null || !post.getWriter().getId().equals(writerId)) {
-            throw new IllegalArgumentException("작성자만 게시글을 삭제할 수 있습니다.");
-        }
-
-        post.setIsDeleted(true);
-        post.setUpdatedAt(LocalDateTime.now());
-        postRepo.save(post);
+    @Transactional
+    public void deletePost(Long postId, Long userId) {
+        int updated = postRepo.softDeleteByIdAndWriter_Id(postId, userId);
+        if (updated == 0)
+            throw new AccessDeniedException("작성자만 게시글을 삭제할 수 있습니다.");
     }
 
     // 반경 검색
@@ -105,8 +101,9 @@ public class CommunityServiceImpl implements CommunityService {
 
     // Comment
     @Override
-    public CommunityResponseDto.Comment createComment(Long writerId, CommunityRequestDto.CreateComment req) {
-        User writer = userRepo.findById(writerId)
+    @Transactional
+    public CommunityResponseDto.Comment createComment(Long userId, CommunityRequestDto.CreateComment req) {
+        User writer = userRepo.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("작성자 정보를 찾을 수 없습니다."));
 
         CommunityPost post = postRepo.findByIdAndIsDeletedFalse(req.getPostId())
@@ -125,12 +122,13 @@ public class CommunityServiceImpl implements CommunityService {
     }
 
     @Override
-    public CommunityResponseDto.Comment updateComment(Long commentId, Long writerId, CommunityRequestDto.UpdateComment req) {
-        CommunityComment comment = commentRepo.findById(commentId)
+    @Transactional
+    public CommunityResponseDto.Comment updateComment(Long commentId, Long userId, CommunityRequestDto.UpdateComment req) {
+        CommunityComment comment = commentRepo.findByIdAndIsDeletedFalse(commentId)
                 .orElseThrow(() -> new IllegalArgumentException("댓글을 찾을 수 없습니다."));
 
         //작성자 확인
-        if (comment.getWriter() == null || !comment.getWriter().getId().equals(writerId)) {
+        if (!comment.getWriter().getId().equals(userId)) {
             throw new IllegalArgumentException("작성자만 댓글을 수정할 수 있습니다.");
         }
 
@@ -139,16 +137,11 @@ public class CommunityServiceImpl implements CommunityService {
     }
 
     @Override
-    public void deleteComment(Long commentId, Long writerId) {
-        CommunityComment comment = commentRepo.findById(commentId)
-                .orElseThrow(() -> new IllegalArgumentException("댓글을 찾을 수 없습니다."));
-
-        //작성자 확인
-        if (comment.getWriter() == null || !comment.getWriter().getId().equals(writerId)) {
-            throw new IllegalArgumentException("작성자만 댓글을 삭제할 수 있습니다.");
-        }
-
-        comment.setIsDeleted(true);
+    @Transactional
+    public void deleteComment(Long commentId, Long userId) {
+        int updated = commentRepo.softDeleteByIdAndWriter_Id(commentId, userId);
+        if (updated == 0)
+            throw new AccessDeniedException("작성자만 댓글을 삭제할 수 있습니다.");
     }
 
     //Helper
