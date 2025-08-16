@@ -21,7 +21,7 @@ public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
-    private Long Id;
+    private Long id;
     private String email;
 
     @JsonIgnore
@@ -60,7 +60,7 @@ public class User implements UserDetails {
         return email;
     }
     public Long getId() {
-        return Id;
+        return id;
     }
 
     @Override
