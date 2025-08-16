@@ -1,8 +1,8 @@
 package roarbits.login.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -43,7 +43,6 @@ public class AuthService {
         if (userRepository.existsByEmail(req.getEmail())) {
             throw new DuplicateEmailException(req.getEmail());
         }
-
         try {
             User newUser = userRepository.save(
                     User.builder()
@@ -58,7 +57,6 @@ public class AuthService {
         }
     }
 
-
     @Transactional
     public LoginResponse login(LoginRequest req) {
         Authentication auth;
@@ -68,7 +66,7 @@ public class AuthService {
             );
             SecurityContextHolder.getContext().setAuthentication(auth);
         } catch (org.springframework.security.core.AuthenticationException e) {
-            throw new org.springframework.security.authentication.BadCredentialsException("이메일/비번 확인");
+            throw new BadCredentialsException("이메일/비번 확인");
         }
 
         User user = userRepository.findByEmail(req.getEmail())
@@ -76,19 +74,31 @@ public class AuthService {
 
         String accessToken = jwtTokenProvider.generateAccessToken(auth);
         String refreshTokenValue = jwtTokenProvider.generateRefreshToken();
+        LocalDateTime expiry = LocalDateTime.now().plusDays(7);
 
-        refreshTokenRepository.findByUser(user).ifPresent(refreshTokenRepository::delete);
-
-        RefreshToken newRefreshToken = RefreshToken.builder()
-                .token(refreshTokenValue)
-                .user(user)
-                .expiryDate(LocalDateTime.now().plusDays(7))
-                .build();
-        refreshTokenRepository.save(newRefreshToken);
+        try {
+            refreshTokenRepository.findByUser(user).ifPresentOrElse(rt -> {
+                rt.setToken(refreshTokenValue);
+                rt.setExpiryDate(expiry);
+                refreshTokenRepository.save(rt);
+            }, () -> {
+                RefreshToken rt = RefreshToken.builder()
+                        .token(refreshTokenValue)
+                        .user(user)
+                        .expiryDate(expiry)
+                        .build();
+                refreshTokenRepository.save(rt);
+            });
+        } catch (DataIntegrityViolationException race) {
+            RefreshToken existing = refreshTokenRepository.findByUser(user)
+                    .orElseThrow(() -> race);
+            existing.setToken(refreshTokenValue);
+            existing.setExpiryDate(expiry);
+            refreshTokenRepository.save(existing);
+        }
 
         return new LoginResponse(accessToken, refreshTokenValue);
     }
-
 
     @Transactional
     public TokenRefreshResponse reissueToken(TokenRefreshRequest request) {
@@ -107,10 +117,10 @@ public class AuthService {
         }
 
         User user = storedRefreshToken.getUser();
-        Authentication authentication = new UsernamePasswordAuthenticationToken(user, "", user.getAuthorities());
+        Authentication authentication =
+                new UsernamePasswordAuthenticationToken(user, "", user.getAuthorities());
 
         String newAccessToken = jwtTokenProvider.generateAccessToken(authentication);
-
         return new TokenRefreshResponse(newAccessToken, requestRefreshToken);
     }
 }

@@ -28,7 +28,7 @@ public class JwtTokenProvider {
             @Value("${jwt.refresh-token-expiration-ms:1209600000}") long refreshTokenExpirationMs
     ) {
         if (secret == null || secret.trim().length() < 32) {
-            throw new IllegalStateException("jwt.secret은 최소 32자 이상이어야 해요.");
+            throw new IllegalStateException("jwt.secret 32자 이상");
         }
         this.userRepository = userRepository;
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));

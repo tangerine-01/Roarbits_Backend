@@ -31,7 +31,7 @@ public class JwtValidationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) return true; // CORS preflight
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) return true;
         String uri = request.getRequestURI();
         for (String p : EXCLUDE) {
             if (matcher.match(p, uri)) return true;
@@ -44,7 +44,16 @@ public class JwtValidationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain chain) throws ServletException, IOException {
 
-        String token = jwtTokenProvider.resolveToken(request); // 수정: provider의 resolveToken 사용
+        String token = jwtTokenProvider.resolveToken(request);
+        String uri = request.getRequestURI();
+
+        if (uri.equals("/swagger-ui.html")
+                || uri.startsWith("/swagger-ui")
+                || uri.equals("/api-docs")
+                || uri.startsWith("/api-docs/")) {
+            chain.doFilter(request, response);
+            return;
+        }
 
         if (!StringUtils.hasText(token)) {
             chain.doFilter(request, response);
@@ -57,7 +66,7 @@ public class JwtValidationFilter extends OncePerRequestFilter {
                 return;
             }
 
-            Authentication auth = jwtTokenProvider.getAuthentication(token); // userId 기반 인증 객체 생성
+            Authentication auth = jwtTokenProvider.getAuthentication(token);
             SecurityContextHolder.getContext().setAuthentication(auth);
             chain.doFilter(request, response);
 
@@ -67,7 +76,7 @@ public class JwtValidationFilter extends OncePerRequestFilter {
         }
     }
 
-    private String resolveToken(HttpServletRequest request) { // 기존 메서드 유지 (안 쓰더라도)
+    private String resolveToken(HttpServletRequest request) {
         String h = request.getHeader("Authorization");
         if (!StringUtils.hasText(h)) return null;
         if (h.startsWith("Bearer ")) return h.substring(7).trim();
