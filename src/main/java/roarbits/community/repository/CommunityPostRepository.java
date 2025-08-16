@@ -12,7 +12,7 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, Lo
     Page<CommunityPost> findAllByIsDeletedFalse(Pageable pageable);
     Optional<CommunityPost> findByIdAndIsDeletedFalse(Long postId);
 
-    boolean existsByIdAndWriter_IdAndIsDeletedFalse(Long id, Long userId);
+    boolean existsByIdAndIsDeletedFalse(Long id);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
