@@ -8,17 +8,13 @@ import lombok.*;
 public class UserInterestResponseDto {
     private Long id;
     private Long userId;
-    private String interestType;
-    private Long interestTargetId;
-    private boolean enabled;
+    private Long subjectId;
 
     public static UserInterestResponseDto fromEntity(roarbits.notification.entity.UserInterest entity) {
         return UserInterestResponseDto.builder()
                 .id(entity.getId())
                 .userId(entity.getUserId())
-                .interestType(entity.getInterestType())
-                .interestTargetId(entity.getInterestTargetId())
-                .enabled(entity.isEnabled())
+                .subjectId(entity.getSubjectId())
                 .build();
     }
 }
