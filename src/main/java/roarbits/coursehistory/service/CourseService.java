@@ -41,6 +41,7 @@ public class CourseService {
                         .courseCode(req.getCourseCode())
                         .courseTitle(req.getCourseTitle()) // subject 마스터 쓰면 여기서 오버라이드
                         .credit(req.getCredit())
+                        .category(req.getCategory())
                         .retake(req.getRetake())
                         .build()
         );
@@ -64,6 +65,7 @@ public class CourseService {
                 .courseCode(e.getCourseCode())
                 .courseTitle(e.getCourseTitle())
                 .credit(e.getCredit())
+                .category(e.getCategory())
                 .retake(e.getRetake())
                 .build();
     }

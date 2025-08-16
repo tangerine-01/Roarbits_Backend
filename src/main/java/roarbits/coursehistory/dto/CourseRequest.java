@@ -29,6 +29,9 @@ public class CourseRequest {
     @Min(1) @Max(6)
     private int credit;
 
+    @NotBlank
+    private String category;
+
     @NotNull
     private RetakeType retake;
 }

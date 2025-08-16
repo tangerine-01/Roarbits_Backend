@@ -13,5 +13,6 @@ public class CourseResponse {
     private String courseCode;
     private String courseTitle;
     private Integer credit;
+    private String category;
     private RetakeType retake;
 }

@@ -31,6 +31,9 @@ public class CourseEntity {
 
     private Integer credit;
 
+    @Column(length = 30)
+    private String category;
+
     @Enumerated(EnumType.STRING)
     private RetakeType retake;
 }
