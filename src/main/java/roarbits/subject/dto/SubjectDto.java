@@ -16,6 +16,7 @@ public class SubjectDto {
     private String description;
     private String courseType;
     private String discipline;
+    private String category;
     private Integer dayOfWeek;
     private LocalTime start;
     private LocalTime end;
@@ -27,6 +28,7 @@ public class SubjectDto {
                 subject.getDescription(),
                 subject.getCourseType(),
                 subject.getDiscipline(),
+                subject.getCategory(),
                 subject.getDayOfWeek(),
                 subject.getStart(),
                 subject.getEnd()

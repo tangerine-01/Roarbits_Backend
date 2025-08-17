@@ -25,6 +25,7 @@ public class Subject {
     private String description;
     private String courseType;
     private String discipline;
+    private String category;
 
     private Integer credit;
     private Integer grade;
