@@ -3,8 +3,6 @@ package roarbits.subject.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalTime;
-
 @Entity
 @Getter
 @Setter
@@ -31,6 +29,6 @@ public class Subject {
     private Integer grade;
     private Integer dayOfWeek; // (1=월, 2=화, ...)
 
-    private LocalTime start;
-    private LocalTime end;
+    private String start;
+    private String end;
 }

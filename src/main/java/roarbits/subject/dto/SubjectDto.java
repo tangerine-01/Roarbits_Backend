@@ -5,8 +5,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import roarbits.subject.entity.Subject;
 
-import java.time.LocalTime;
-
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -18,8 +16,8 @@ public class SubjectDto {
     private String discipline;
     private String category;
     private Integer dayOfWeek;
-    private LocalTime start;
-    private LocalTime end;
+    private String start;
+    private String end;
 
     public static SubjectDto from(Subject subject) {
         return new SubjectDto(
