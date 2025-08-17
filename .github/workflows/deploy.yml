@@ -11,21 +11,10 @@ permissions:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          submodules: false
-          lfs: false
-
-      - name: Sanity check (git)
-        run: |
-          pwd
-          git --version
-          git rev-parse --is-inside-work-tree
-          git log --oneline -3
 
       - name: Fix permissions / line endings
         run: |
@@ -40,17 +29,7 @@ jobs:
           java-version: 17
 
       - name: Build (Gradle)
-        run: |
-          ./gradlew clean build -x test --no-daemon
-          echo "== ls build/libs =="
-          ls -alh build/libs || true
-
-      - name: Fail if JAR not found
-        run: |
-          test -n "$(ls -1 build/libs/*.jar 2>/dev/null)" || {
-            echo "❌ JAR가 없습니다. (멀티모듈이면 경로를 맞추세요: */build/libs/*.jar)"
-            exit 1
-          }
+        run: ./gradlew clean build -x test --no-daemon
 
       - name: Copy JAR to EC2
         uses: appleboy/scp-action@v0.1.7
