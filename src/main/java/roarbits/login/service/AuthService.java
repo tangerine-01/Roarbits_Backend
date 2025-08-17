@@ -71,6 +71,9 @@ public class AuthService {
 
         User user = userRepository.findByEmail(req.getEmail())
                 .orElseThrow(() -> new BadCredentialsException("이메일/비번 확인"));
+        if (user.isWithdrawn()) {
+            throw new BadCredentialsException("탈퇴한 계정입니다");
+        }
 
         String accessToken = jwtTokenProvider.generateAccessToken(auth);
         String refreshTokenValue = jwtTokenProvider.generateRefreshToken();
