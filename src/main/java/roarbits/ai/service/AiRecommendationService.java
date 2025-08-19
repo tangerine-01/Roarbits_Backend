@@ -55,7 +55,7 @@ public class AiRecommendationService {
                         this::toApiError)
                 .bodyToMono(String.class)
                 .timeout(Duration.ofSeconds(20))
-                .onErrorResume(error -> Mono.just("{\"candidates\": [{\"content\": {\"parts\": [{\"text\": \"추천 문구 생성에 실패했습니다.\"}]}}]"))
+                .onErrorResume(error -> Mono.just("{\"candidates\": [{\"content\": {\"parts\": [{\"text\": \"추천 문구 생성에 실패했습니다.\"}]}}]}"))
                 .block();
 
         return extractTextList(response);
