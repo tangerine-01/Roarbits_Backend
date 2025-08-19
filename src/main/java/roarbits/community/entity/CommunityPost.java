@@ -6,11 +6,10 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.ArrayList;
 
 @Entity
-@Table(name = "community_post",
-        indexes = {@Index(name = "idx_post_lat_lng", columnList = "lat, lng")
-    })
+@Table(name = "community_post")
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -20,20 +19,24 @@ public class CommunityPost {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, length = 260)
     private String title;
 
-    @Column(length = 1000)
+    @Column(nullable = false, length = 1000)
     private String content;
 
+    @Builder.Default
     private boolean isDeleted = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false)
     private User writer;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
     private PostType type;
 
+    /*
     // 위치, 시간, 모집 인원
     @Column
     private Double lat;
@@ -44,12 +47,27 @@ public class CommunityPost {
     private LocalDateTime meetTime;
 
     private Integer maxParticipants;
+    */
 
-    private LocalDateTime createdAt = LocalDateTime.now();
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
+    @Builder.Default
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CommunityComment> comments;
+    private List<CommunityComment> comments = new ArrayList<>();
+
+    @PrePersist
+    void onCreate() {
+        LocalDateTime now = LocalDateTime.now();
+        this.createdAt = now;
+        this.updatedAt = now;
+        if(this.type == null) this.type = PostType.GENERAL;
+    }
+
+    @PreUpdate
+    void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 
     public boolean getIsDeleted() {
         return isDeleted;

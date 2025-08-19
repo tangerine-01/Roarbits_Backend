@@ -2,8 +2,6 @@ package roarbits.community.service;
 
 import roarbits.community.dto.CommunityRequestDto;
 import roarbits.community.dto.CommunityResponseDto;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 public interface CommunityService {
     //Post
@@ -12,8 +10,6 @@ public interface CommunityService {
     CommunityResponseDto.Post updatePost(Long postId, Long userId, CommunityRequestDto.UpdatePost req);
     void deletePost(Long postId, Long userId);
 
-    //반경 검색
-    Page<CommunityResponseDto.Post> findNearby(double lat, double lng, double radiusMeters, Pageable pageable);
 
     //Comment
     CommunityResponseDto.Comment createComment(Long userId, CommunityRequestDto.CreateComment req);
