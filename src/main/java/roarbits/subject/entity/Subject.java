@@ -28,7 +28,11 @@ public class Subject {
     private Integer credit;
     private Integer grade;
     private Integer dayOfWeek; // (1=월, 2=화, ...)
+    private Integer dayOfWeek2nd;
 
     private String start;
     private String end;
+
+    private String start2nd;
+    private String end2nd;
 }

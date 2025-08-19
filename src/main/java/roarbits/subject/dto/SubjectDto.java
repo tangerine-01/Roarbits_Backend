@@ -16,8 +16,11 @@ public class SubjectDto {
     private String discipline;
     private String category;
     private Integer dayOfWeek;
+    private Integer dayOfWeek2nd;
     private String start;
     private String end;
+    private String start2nd;
+    private String end2nd;
 
     public static SubjectDto from(Subject subject) {
         return new SubjectDto(
@@ -28,8 +31,11 @@ public class SubjectDto {
                 subject.getDiscipline(),
                 subject.getCategory(),
                 subject.getDayOfWeek(),
+                subject.getDayOfWeek2nd(),
                 subject.getStart(),
-                subject.getEnd()
+                subject.getEnd(),
+                subject.getStart2nd(),
+                subject.getEnd2nd()
         );
     }
 }
