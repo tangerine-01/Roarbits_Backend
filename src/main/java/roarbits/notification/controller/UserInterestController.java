@@ -16,6 +16,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/interest")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "bearerAuth")
+
 public class UserInterestController {
 
     private final UserInterestService service;

@@ -17,6 +17,8 @@ import roarbits.community.service.CommunityService;
 @RestController
 @RequestMapping("/api/community/comments")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "bearerAuth")
+
 public class CommunityCommentController {
     private final CommunityService service;
 

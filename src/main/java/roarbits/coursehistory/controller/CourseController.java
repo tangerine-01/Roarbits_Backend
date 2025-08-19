@@ -23,6 +23,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/course-histories")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "bearerAuth")
+
 public class CourseController {
 
     private final CourseService service;

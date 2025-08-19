@@ -1,5 +1,6 @@
 package roarbits.user.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal; // 현재 인증된 사용자 정보 가져오기
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +26,7 @@ public class UserController {
     }
 
     @DeleteMapping("/me")
+    @Operation(summary = "회원탈퇴")
     public ApiResponse<String> deleteUser(@AuthenticationPrincipal User user) {
         userService.deleteUser(user.getUsername());
         return ApiResponse.onSuccess(SuccessCode.USER_DELETE_SUCCESS, "계정이 삭제되었습니다.");

@@ -15,10 +15,13 @@ import roarbits.user.entity.User;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 
 @RestController
 @RequestMapping("/api/profile")
 @RequiredArgsConstructor
+@Tag(name = "Profile", description = "프로필 단계별 저장/수정 API")
 public class ProfileController {
     private final ProfileService profileService;
     private final UserService    userService;
@@ -28,6 +31,7 @@ public class ProfileController {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
+    @Operation(summary = "학교/전공")
     public ResponseEntity<Map<String, Object>> step1(
             @AuthenticationPrincipal User user,
             @Valid @RequestBody ProfileDto dto
@@ -44,6 +48,7 @@ public class ProfileController {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
+    @Operation(summary = "입학년도")
     public ResponseEntity<Map<String, Object>> step2(
             @AuthenticationPrincipal User user,
             @Valid @RequestBody ProfileDto dto
@@ -60,6 +65,7 @@ public class ProfileController {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
+    @Operation(summary = "졸업유형")
     public ResponseEntity<Map<String, Object>> step3(
             @AuthenticationPrincipal User user,
             @Valid @RequestBody ProfileDto dto
@@ -68,7 +74,7 @@ public class ProfileController {
         profileService.saveStep3(userId, dto.getGraduationType());
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(Map.of("status", "ok", "step",3, "message", "profile step2 saved"));
+                .body(Map.of("status", "ok", "step",3, "message", "profile step3 saved"));
     }
 
     @PostMapping(
@@ -76,6 +82,7 @@ public class ProfileController {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
+    @Operation(summary = "이수 과목")
     public ResponseEntity<Map<String, Object>> step4(
             @AuthenticationPrincipal User user,
             @Valid @RequestBody ProfileDto dto

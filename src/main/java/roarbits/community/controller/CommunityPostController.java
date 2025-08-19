@@ -20,6 +20,8 @@ import roarbits.community.service.CommunityService;
 @RestController
 @RequestMapping("/api/community/posts")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "bearerAuth")
+
 public class CommunityPostController {
     private final CommunityService communityService;
 

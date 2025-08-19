@@ -21,6 +21,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RestController
 @RequestMapping("/api/timetables")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "bearerAuth")
+
 public class TimetableController {
     private final TimetableService timetableService;
 
