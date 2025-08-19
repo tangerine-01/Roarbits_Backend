@@ -2,8 +2,6 @@ package roarbits.community.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -73,20 +71,5 @@ public class CommunityPostController {
     ) {
         communityService.deletePost(postId, userId);
         return ResponseEntity.noContent().build();
-    }
-
-    // 위치 기반 탐색
-    @GetMapping("/nearby")
-    @Operation(
-            summary = "위치 기반 게시글 탐색",
-            description = "주어진 위치와 반경 내의 게시글을 조회합니다.",
-            security = { @SecurityRequirement(name = "Authorization")})
-    public ResponseEntity<Page<CommunityResponseDto.Post>> findNearby(
-            @RequestParam double lat,
-            @RequestParam double lng,
-            @RequestParam double radiusMeters,
-            Pageable pageable) {
-        Page<CommunityResponseDto.Post> page = communityService.findNearby(lat, lng, radiusMeters, pageable);
-        return ResponseEntity.ok(page);
     }
 }

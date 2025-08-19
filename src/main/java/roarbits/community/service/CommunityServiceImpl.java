@@ -1,8 +1,6 @@
 package roarbits.community.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,10 +36,6 @@ public class CommunityServiceImpl implements CommunityService {
                 .content(req.getContent())
                 .writer(writer)
                 .type(req.getType())
-                .lat(req.getLat())
-                .lng(req.getLng())
-                .meetTime(req.getMeetTime())
-                .maxParticipants(req.getMaxParticipants())
                 .isDeleted(false)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
@@ -52,7 +46,6 @@ public class CommunityServiceImpl implements CommunityService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public CommunityResponseDto.Post getPost(Long postId) {
         CommunityPost post = postRepo.findByIdAndIsDeletedFalse(postId)
                 .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
@@ -73,11 +66,6 @@ public class CommunityServiceImpl implements CommunityService {
         post.setTitle(req.getTitle());
         post.setContent(req.getContent());
         post.setType(req.getType());
-        post.setLat(req.getLat());
-        post.setLng(req.getLng());
-        post.setMeetTime(req.getMeetTime());
-        post.setMaxParticipants(req.getMaxParticipants());
-
         post.setUpdatedAt(LocalDateTime.now());
 
         return toPostDto(post);
@@ -89,14 +77,6 @@ public class CommunityServiceImpl implements CommunityService {
         int updated = postRepo.softDeleteByIdAndWriter_Id(postId, userId);
         if (updated == 0)
             throw new AccessDeniedException("작성자만 게시글을 삭제할 수 있습니다.");
-    }
-
-    // 반경 검색
-    @Override
-    @Transactional(readOnly = true)
-    public Page<CommunityResponseDto.Post> findNearby(double lat, double lng, double radiusMeters, Pageable pageable) {
-        Page<CommunityPost> page = postRepo.findNearby(lat, lng, radiusMeters, pageable);
-        return page.map(p -> CommunityResponseDto.Post.from(p, (int) commentRepo.countByPostId(p.getId())));
     }
 
     // Comment
