@@ -21,7 +21,7 @@ public class UserInterestController {
     private final UserInterestService service;
 
     // 관심 알림 설정 등록 또는 수정
-    @PostMapping("/settings")
+    @PostMapping("/subjects/{subjectId}")
     @Operation(
             summary = "관심 알림 설정 등록 또는 수정",
             description = "사용자의 관심 알림 설정을 등록하거나 수정합니다. 이미 존재하는 경우에는 아무 작업도 하지 않습니다.",
@@ -30,7 +30,7 @@ public class UserInterestController {
             @AuthenticationPrincipal(expression = "id") Long userId,
             @PathVariable Long subjectId) {
         service.saveOrUpdateInterest(userId, subjectId);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        return ResponseEntity.noContent().build();
     }
 
     // 사용자 관심 목록 조회
