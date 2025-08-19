@@ -2,6 +2,7 @@ package roarbits.login.auth.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
@@ -27,6 +28,7 @@ import roarbits.user.repository.UserRepository;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@Slf4j
 public class AuthController {
 
     private final AuthService authService;
@@ -55,11 +57,31 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ApiResponse<Void> logout() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        User user = (User) auth.getPrincipal();
-        refreshTokenRepository.deleteByUser(user);
-        return ApiResponse.onSuccess(SuccessCode.USER_LOGOUT_SUCCESS, null);
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.isAuthenticated()) {
+                String email = auth.getName();
+                if (email != null && !email.isBlank()) {
+                    userRepository.findByEmail(email).ifPresent(u -> {
+                        try {
+                            refreshTokenRepository.deleteByUser(u);
+                        } catch (Exception e) {
+                            log.debug("Refresh token delete skip (non-fatal): {}", e.getMessage());
+                        }
+                    });
+                }
+            }
+            return ApiResponse.onSuccess(SuccessCode.USER_LOGOUT_SUCCESS, null);
+        } catch (Exception e) {
+            log.debug("Logout soft-fail: {}", e.getMessage());
+            return ApiResponse.onSuccess(SuccessCode.USER_LOGOUT_SUCCESS, null);
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
     }
+
+
+
 
 
     // 토큰 재발급

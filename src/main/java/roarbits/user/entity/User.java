@@ -3,6 +3,8 @@ package roarbits.user.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.userdetails.UserDetails;
+
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Collection;
 import java.util.stream.Collectors;
@@ -62,6 +64,10 @@ public class User implements UserDetails {
     public Long getId() {
         return id;
     }
+
+    @Column(nullable = false)
+    private boolean withdrawn = false;
+    private LocalDateTime withdrawnAt;
 
     @Override
     public String getPassword() {
