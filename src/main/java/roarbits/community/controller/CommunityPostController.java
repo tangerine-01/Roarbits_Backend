@@ -17,6 +17,9 @@ import roarbits.community.dto.CommunityRequestDto;
 import roarbits.community.dto.CommunityResponseDto;
 import roarbits.community.service.CommunityService;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
 import java.net.URI;
 
 @RestController
@@ -38,7 +41,7 @@ public class CommunityPostController {
             @Parameter(hidden = true)
             @AuthenticationPrincipal(expression = "id") Long userId,
             @Valid @RequestBody CommunityRequestDto.CreatePost req) {
-        if(userId == null) throw new UnauthorizedException("로그인이 필요합니다.");
+        if(userId == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
         var created = communityService.createPost(userId, req);
         URI location = URI.create("/api/community/posts/" + created.getId());
         return ResponseEntity.created(location).body(created);

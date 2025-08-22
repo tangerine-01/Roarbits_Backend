@@ -1,32 +1,47 @@
 package roarbits.notification.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.web.server.ResponseStatusException;
 import roarbits.notification.entity.UserInterest;
 import roarbits.notification.repository.UserInterestRepository;
+import roarbits.subject.repository.SubjectRepository;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class UserInterestService {
-
+    private final SubjectRepository subjectRepository;
     private final UserInterestRepository repository;
 
     // 관심 알림 설정 등록 또는 수정
     @Transactional
     public void saveOrUpdateInterest(Long userId, Long subjectId) {
-        if(repository.existsByUserIdAndSubjectId(userId, subjectId)) return;
-        repository.save(UserInterest.builder().userId(userId).subjectId(subjectId).build());
+        if (!subjectRepository.existsById(subjectId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "과목 없음");
+        }
+        if (repository.existsByUserIdAndSubjectId(userId, subjectId)) return;
+        try {
+            repository.save(UserInterest.builder()
+                    .userId(userId)
+                    .subjectId(subjectId)
+                    .build());
+        } catch (DataIntegrityViolationException e) {
+        }
     }
 
     // 관심 알림 삭제
     @Transactional
     public void deleteInterest(Long userId, Long subjectId) {
-        repository.deleteByUserIdAndSubjectId(userId, subjectId);
+        long n = repository.deleteByUserIdAndSubjectId(userId, subjectId);
+        if (n == 0) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "즐겨찾기 없음");
     }
 
     // 즐겨찾기 여부 확인
@@ -35,8 +50,6 @@ public class UserInterestService {
     }
 
     public List<Long> myInterestSubjectIds(Long userId) {
-        return repository.findAllByUserId(userId).stream()
-                .map(UserInterest::getSubjectId)
-                .toList();
+        return repository.findAllByUserId(userId).stream().map(UserInterest::getSubjectId).toList();
     }
 }

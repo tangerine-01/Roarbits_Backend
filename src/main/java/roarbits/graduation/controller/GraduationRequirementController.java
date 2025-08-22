@@ -25,6 +25,7 @@ import roarbits.graduation.dto.GraduationProgressDto;
 @RequestMapping("/api/graduation")
 @RequiredArgsConstructor
 @Validated
+@SecurityRequirement(name = "bearerAuth")
 public class GraduationRequirementController {
 
     private final GraduationRequirementService graduationRequirementService;

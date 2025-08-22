@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
+import roarbits.login.auth.CustomUserDetails;
 import roarbits.user.entity.User;
 import roarbits.user.repository.UserRepository;
 
@@ -36,18 +37,14 @@ public class JwtTokenProvider {
         this.refreshTokenExpirationMs = refreshTokenExpirationMs;
     }
 
-    public String resolveToken(jakarta.servlet.http.HttpServletRequest request) {
-        String bearer = request.getHeader("Authorization");
-        return (bearer != null && bearer.startsWith("Bearer ")) ? bearer.substring(7) : null;
-    }
 
     public String generateAccessToken(Authentication authentication) {
-        User principal = (User) authentication.getPrincipal();
+        Long userId = extractUserId(authentication.getPrincipal());
         Date now = new Date();
         Date exp = new Date(now.getTime() + accessTokenExpirationMs);
 
         return Jwts.builder()
-                .subject(String.valueOf(principal.getId()))
+                .subject(String.valueOf(userId))
                 .issuedAt(now)
                 .expiration(exp)
                 .signWith(key)
@@ -66,21 +63,16 @@ public class JwtTokenProvider {
     }
 
     public Long getUserIdFromToken(String token) {
-        return Long.valueOf(
-                Jwts.parser()
-                        .verifyWith(key)
-                        .build()
-                        .parseSignedClaims(token)
-                        .getPayload()
-                        .getSubject()
-        );
+        Claims c =Jwts.parser().verifyWith(key).build()
+                .parseSignedClaims(token).getPayload();
+        return Long.parseLong(c.getSubject());
     }
 
     public boolean validateToken(String token) {
         try {
             Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
             return true;
-        } catch (JwtException | IllegalArgumentException e) {
+        } catch (Exception e) {
             return false;
         }
     }
@@ -89,6 +81,23 @@ public class JwtTokenProvider {
         Long userId = getUserIdFromToken(token);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
-        return new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+        CustomUserDetails principal = new CustomUserDetails(user);
+        return new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
+    }
+
+    private Long extractUserId(Object principal) {
+        if (principal instanceof CustomUserDetails cud) {
+            return cud.getId();
+        }
+        if (principal instanceof User u) {
+            return u.getId();
+        }
+        if (principal instanceof org.springframework.security.core.userdetails.UserDetails ud) {
+            String email = ud.getUsername();
+            return userRepository.findByEmail(email)
+                    .map(User::getId)
+                    .orElseThrow(() -> new IllegalStateException("User not found by email: " + email));
+        }
+        throw new IllegalStateException("Unsupported principal type: " + principal.getClass());
     }
 }

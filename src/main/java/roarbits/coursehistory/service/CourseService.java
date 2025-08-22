@@ -1,12 +1,16 @@
 package roarbits.coursehistory.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import roarbits.coursehistory.dto.CourseRequest;
 import roarbits.coursehistory.dto.CourseResponse;
 import roarbits.coursehistory.entity.CourseEntity;
 import roarbits.coursehistory.repository.CourseRepository;
+import roarbits.subject.repository.SubjectRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.List;
 
@@ -16,57 +20,53 @@ import java.util.List;
 public class CourseService {
 
     private final CourseRepository repo;
+    private final SubjectRepository subjectRepository;
 
     public List<CourseResponse> getAll(Long userId) {
         return repo.findByUserId(userId)
                 .stream()
-                .map(this::toDto)
+                .map(CourseResponse::from)
                 .toList();
     }
 
     @Transactional
     public CourseResponse addCourse(Long userId, CourseRequest req) {
-        // 중복 체크
-        if (repo.existsByUserIdAndYearAndSemesterAndCourseCode(
-                userId, req.getYear(), req.getSemester(), req.getCourseCode())) {
-            throw new IllegalArgumentException("이미 등록된 수강이력입니다.");
+        var subject = subjectRepository.findById(req.getSubjectId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 과목입니다."));
+
+        if (repo.existsByUserIdAndYearAndSemesterAndSubject_Id(
+                userId, req.getYear(), req.getSemester(), req.getSubjectId())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 등록된 수강이력입니다.");
         }
 
-        // 저장
-        CourseEntity saved = repo.save(
-                CourseEntity.builder()
-                        .userId(userId)
-                        .year(req.getYear())
-                        .semester(req.getSemester())
-                        .courseCode(req.getCourseCode())
-                        .courseTitle(req.getCourseTitle()) // subject 마스터 쓰면 여기서 오버라이드
-                        .credit(req.getCredit())
-                        .category(req.getCategory())
-                        .retake(req.getRetake())
-                        .build()
-        );
+        try {
+            CourseEntity saved = repo.save(
+                    CourseEntity.builder()
+                            .userId(userId)
+                            .year(req.getYear())
+                            .semester(req.getSemester())
+                            .subject(subject)
+                            .courseTitle(req.getCourseTitle())
+                            .credit(req.getCredit())
+                            .category(req.getCategory())
+                            .retake(req.getRetake())
+                            .build()
+            );
 
-        return toDto(saved);
+            return CourseResponse.from(saved);
+        } catch (DataIntegrityViolationException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 등록된 수강이력입니다.");
+        }
     }
 
     @Transactional
     public void delete(Long userId, Long courseId) {
         CourseEntity e = repo.findByIdAndUserId(courseId, userId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 수강이력입니다."));
-        repo.delete(e);
-    }
-
-    private CourseResponse toDto(CourseEntity e) {
-        return CourseResponse.builder()
-                .id(e.getId())
-                .userId(e.getUserId())
-                .year(e.getYear())
-                .semester(e.getSemester())
-                .courseCode(e.getCourseCode())
-                .courseTitle(e.getCourseTitle())
-                .credit(e.getCredit())
-                .category(e.getCategory())
-                .retake(e.getRetake())
-                .build();
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 수강이력입니다."));
+        try {
+            repo.delete(e);
+        } catch (DataIntegrityViolationException ex) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "참조 중이라 삭제할 수 없습니다.");
+        }
     }
 }

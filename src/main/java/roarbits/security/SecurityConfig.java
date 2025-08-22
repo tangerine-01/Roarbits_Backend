@@ -3,6 +3,7 @@ package roarbits.security;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -49,9 +50,10 @@ public class SecurityConfig {
         return source;
     }
 
-    @Bean
+    @Bean @Order(0)
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                .securityMatcher("/api/**")
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -59,16 +61,11 @@ public class SecurityConfig {
                 .httpBasic(basic -> basic.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/", "/error", "/favicon.ico").permitAll()
-                        .requestMatchers("/api-docs", "/api-docs/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**",
-                                "/v3/api-docs", "/v3/api-docs/**",
-                                "/api/v3/api-docs", "/api/v3/api-docs/**"
-                        ).permitAll()
-                        .requestMatchers("/actuator/health").permitAll()
-
-                        .anyRequest().permitAll()
+                        .requestMatchers("/api/v3/api-docs/**").permitAll()
+                        .requestMatchers("/api/interest/**").authenticated()
+                        .requestMatchers("/api/course-histories/**").authenticated()
+                        .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex.authenticationEntryPoint((req, res, e) -> {
                     res.setStatus(401);
@@ -84,4 +81,26 @@ public class SecurityConfig {
 
         return http.build();
     }
+
+    @Bean
+    @Order(1)
+    public SecurityFilterChain publicChain(HttpSecurity http) throws Exception {
+        http
+                .securityMatcher("/**")
+                .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(
+                                "/", "/error", "/favicon.ico",
+                                "/swagger-ui.html", "/swagger-ui/**",
+                                "/v3/api-docs", "/v3/api-docs/**",
+                                "/api-docs", "/api-docs/**",
+                                "/actuator/health"
+                        ).permitAll()
+                        .anyRequest().permitAll()
+                );
+        return http.build();
+    }
+
 }

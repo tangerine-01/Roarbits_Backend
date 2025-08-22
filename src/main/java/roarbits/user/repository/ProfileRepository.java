@@ -7,4 +7,5 @@ import roarbits.user.entity.User;
 
 public interface ProfileRepository extends JpaRepository<Profile, Long> {
     Optional<Profile> findByUser(User user);
+    Optional<Profile> findByUser_Id(Long userId);
 }

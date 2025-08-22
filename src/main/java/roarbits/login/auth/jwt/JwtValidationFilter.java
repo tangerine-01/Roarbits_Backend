@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.AntPathMatcher;
@@ -14,12 +15,12 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.List;
 
+@Slf4j
 @RequiredArgsConstructor
 public class JwtValidationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
 
-    // SecurityConfig의 permitAll 과 동일하게 유지
     private static final List<String> EXCLUDE = List.of(
             "/", "/error", "/favicon.ico",
             "/api/auth/**",
@@ -44,38 +45,51 @@ public class JwtValidationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain chain) throws ServletException, IOException {
 
-        String token = jwtTokenProvider.resolveToken(request);
-        String uri = request.getRequestURI();
-
-        if (uri.equals("/swagger-ui.html")
-                || uri.startsWith("/swagger-ui")
-                || uri.equals("/api-docs")
-                || uri.startsWith("/api-docs/")) {
-            chain.doFilter(request, response);
-            return;
-        }
+        String token = resolveToken(request);
 
         if (!StringUtils.hasText(token)) {
-            chain.doFilter(request, response);
+            SecurityContextHolder.clearContext();
+            unauthorized(response, "Missing Bearer token");
             return;
         }
 
         try {
             if (!jwtTokenProvider.validateToken(token)) {
+                SecurityContextHolder.clearContext();
                 unauthorized(response, "Invalid or expired token");
                 return;
             }
 
             Authentication auth = jwtTokenProvider.getAuthentication(token);
+            if (auth == null) {
+                SecurityContextHolder.clearContext();
+                unauthorized(response, "Authentication failed");
+                return;
+            }
             SecurityContextHolder.getContext().setAuthentication(auth);
-            chain.doFilter(request, response);
 
-        } catch (Exception ex) {
+        } catch (io.jsonwebtoken.ExpiredJwtException e) {
             SecurityContextHolder.clearContext();
-            unauthorized(response, "Authentication failed");
-        }
-    }
+            log.warn("JWT expired: {}", e.getMessage());
+            unauthorized(response, "JWT expired");
+            return;
 
+        } catch (io.jsonwebtoken.security.SignatureException
+                | io.jsonwebtoken.MalformedJwtException
+                | io.jsonwebtoken.UnsupportedJwtException e){
+            SecurityContextHolder.clearContext();
+            log.warn("JWT invalid: {}", e.getMessage());
+            unauthorized(response, "JWT invalid");
+            return;
+
+        }catch (Exception e) {
+            SecurityContextHolder.clearContext();
+            log.warn("JWT validation error: {}", e.toString());
+            unauthorized(response, "Authentication failed");
+            return;
+        }
+        chain.doFilter(request, response);
+    }
     private String resolveToken(HttpServletRequest request) {
         String h = request.getHeader("Authorization");
         if (!StringUtils.hasText(h)) return null;

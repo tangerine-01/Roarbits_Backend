@@ -1,30 +1,35 @@
 package roarbits.user.controller;
 
+import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RestController;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.server.ResponseStatusException;
 import roarbits.user.entity.CompletedCourse;
 import roarbits.user.dto.ProfileDto;
 import roarbits.user.service.ProfileService;
-import roarbits.user.service.UserService;
-import roarbits.user.entity.User;
+import roarbits.login.auth.CustomUserDetails;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 @RestController
-@RequestMapping("/api/profile")
+@RequestMapping("/api/profiles")
 @RequiredArgsConstructor
 @Tag(name = "Profile", description = "프로필 단계별 저장/수정 API")
+@SecurityRequirement(name = "bearerAuth")
+@PreAuthorize("isAuthenticated()")
 public class ProfileController {
     private final ProfileService profileService;
-    private final UserService    userService;
 
     @PostMapping(
             value = "/step1",
@@ -33,10 +38,12 @@ public class ProfileController {
     )
     @Operation(summary = "학교/전공")
     public ResponseEntity<Map<String, Object>> step1(
-            @AuthenticationPrincipal User user,
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal CustomUserDetails me,
             @Valid @RequestBody ProfileDto dto
     ) {
-        Long userId = user.getId();
+        if (me == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다");
+        Long userId = me.getId();
         profileService.saveStep1(userId, dto.getUniversity(), dto.getMajor());
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
@@ -50,10 +57,12 @@ public class ProfileController {
     )
     @Operation(summary = "입학년도")
     public ResponseEntity<Map<String, Object>> step2(
-            @AuthenticationPrincipal User user,
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal CustomUserDetails me,
             @Valid @RequestBody ProfileDto dto
     ) {
-        Long userId = user.getId();
+        if (me == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다");
+        Long userId = me.getId();
         profileService.saveStep2(userId, dto.getEnrollmentYear());
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
@@ -67,15 +76,33 @@ public class ProfileController {
     )
     @Operation(summary = "졸업유형")
     public ResponseEntity<Map<String, Object>> step3(
-            @AuthenticationPrincipal User user,
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal CustomUserDetails me,
             @Valid @RequestBody ProfileDto dto
     ) {
-        Long userId = user.getId();
+        if (me == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다");
+        Long userId = me.getId();
         profileService.saveStep3(userId, dto.getGraduationType());
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(Map.of("status", "ok", "step",3, "message", "profile step3 saved"));
     }
+
+    public static class Step4Request {
+        private List<CourseItem> completedCourses;
+        public List<CourseItem> getCompletedCourses() { return completedCourses; }   // [MOD]
+        public void setCompletedCourses(List<CourseItem> completedCourses) { this.completedCourses = completedCourses; } // [MOD]
+    }
+
+    public static class CourseItem {
+        private String courseCode;
+        private String courseTitle;
+        public String getCourseCode() { return courseCode; }
+        public void setCourseCode(String courseCode) { this.courseCode = courseCode; } // [MOD]
+        public String getCourseTitle() { return courseTitle; }
+        public void setCourseTitle(String courseTitle) { this.courseTitle = courseTitle; } // [MOD]
+    }
+
 
     @PostMapping(
             value = "/step4",
@@ -84,33 +111,39 @@ public class ProfileController {
     )
     @Operation(summary = "이수 과목")
     public ResponseEntity<Map<String, Object>> step4(
-            @AuthenticationPrincipal User user,
-            @Valid @RequestBody ProfileDto dto
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal CustomUserDetails me,
+            @RequestBody Step4Request req
     ) {
-        Long userId = user.getId();
+        if (me == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다");
 
-        List<CompletedCourse> courses = dto.getCompletedCourses().stream()
+        List<CompletedCourse> courses =
+                (req != null && req.getCompletedCourses() != null ? req.getCompletedCourses() : List.<CourseItem>of())
+                .stream()
                 .map(d -> CompletedCourse.builder()
                         .courseCode(d.getCourseCode())
                         .courseTitle(d.getCourseTitle())
                         .build())
                 .collect(Collectors.toList());
 
-        profileService.saveStep4(userId, courses);
+        profileService.saveStep4(me.getId(), courses);
+
+        boolean done = profileService.isProfileCompleted(me.getId());
 
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(Map.of("status","ok","step",4,"count", courses.size(), "message","profile step4 saved"));
+                .body(Map.of("status","ok","step",4,"count", courses.size(),
+                        "isCompleted", done, "message","profile step4 saved"));
     }
 
     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> updateProfile(
-            @AuthenticationPrincipal User user,
+            @AuthenticationPrincipal CustomUserDetails me,
             @Valid
             @RequestBody ProfileDto dto
     ) {
-        Long userId = user.getId();
-        profileService.updateProfile(userId, dto);
+        if (me == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다");
+        profileService.updateProfile(me.getId(), dto);
         return ResponseEntity.noContent().build();
     }
 }

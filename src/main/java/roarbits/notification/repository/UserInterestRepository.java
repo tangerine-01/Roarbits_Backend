@@ -7,6 +7,6 @@ import roarbits.notification.entity.UserInterest;
 
 public interface UserInterestRepository extends JpaRepository<UserInterest, Long> {
     boolean existsByUserIdAndSubjectId(Long userId, Long subjectId);
-    void deleteByUserIdAndSubjectId(Long userId, Long subjectId);
+    long deleteByUserIdAndSubjectId(Long userId, Long subjectId);
     List<UserInterest> findAllByUserId(Long userId);
 }

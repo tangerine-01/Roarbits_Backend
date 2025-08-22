@@ -99,4 +99,18 @@ public class ProfileService {
         });
         profileRepository.save(profile);
     }
+
+    @Transactional(readOnly = true)
+    public boolean isProfileCompleted(Long userId) {
+        return profileRepository.findByUser_Id(userId)
+                .map(p -> hasText(p.getUniversity())
+                        && hasText(p.getMajor())
+                        && p.getEnrollmentYear() != null
+                        && p.getGraduationType() != null)
+                .orElse(false);
+    }
+
+    private static boolean hasText(String s) {
+        return s != null && !s.isBlank();
+    }
 }

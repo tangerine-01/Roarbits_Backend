@@ -13,8 +13,8 @@ import roarbits.coursehistory.dto.CourseEnums.Semester;
 
 public interface CourseRepository extends JpaRepository<CourseEntity, Long> {
     List<CourseEntity> findByUserId(Long userId);
-    boolean existsByUserIdAndYearAndSemesterAndCourseCode(
-            Long userId, Integer year, Semester semester, String courseCode);
+    boolean existsByUserIdAndYearAndSemesterAndSubject_Id(
+            Long userId, Integer year, Semester semester, Long subjectId);
 
     Optional<CourseEntity> findByIdAndUserId(Long id, Long userId);
 

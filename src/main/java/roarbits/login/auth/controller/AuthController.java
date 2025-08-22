@@ -3,16 +3,16 @@ package roarbits.login.auth.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import roarbits.user.entity.User;
 
+import org.springframework.web.server.ResponseStatusException;
 import roarbits.global.api.ApiResponse;
 import roarbits.global.api.SuccessCode;
 
-import roarbits.login.auth.jwt.JwtTokenProvider;
 import roarbits.login.auth.jwt.RefreshTokenRepository;
 import roarbits.login.dto.LoginRequest;
 import roarbits.login.dto.LoginResponse;
@@ -22,8 +22,10 @@ import roarbits.login.service.AuthService;
 
 import roarbits.user.dto.SignUpRequest;
 import roarbits.user.dto.SignUpResponse;
-import roarbits.user.entity.User;
 import roarbits.user.repository.UserRepository;
+
+import roarbits.onboarding.dto.StepFlags;
+import roarbits.onboarding.service.OnboardingService;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -33,8 +35,9 @@ public class AuthController {
 
     private final AuthService authService;
     private final RefreshTokenRepository refreshTokenRepository;
-    private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
+
+    private final OnboardingService onboardingService;
 
     // 회원가입
     @PostMapping("/signup")
@@ -52,6 +55,11 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest loginRequest) {
         LoginResponse response = authService.login(loginRequest);
+        Long userId = userRepository.findByEmail(loginRequest.getEmail())
+                .map(roarbits.user.entity.User::getId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "<UNK> <UNK> <UNK> <UNK>"));
+        StepFlags steps = onboardingService.getFlags(userId);
+        response.setSteps(steps);
         return ResponseEntity.ok(response);
     }
 
