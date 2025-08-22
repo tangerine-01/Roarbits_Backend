@@ -23,6 +23,12 @@ public class Timetable {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Column(name = "is_main", nullable = false)
+    private boolean isMain;
+
+    public void setMain(boolean main) { this.isMain = main; }
+    public boolean isMain() { return isMain; }
+
     @OneToMany(mappedBy = "timetable", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<TimeSlot> timeSlots = new ArrayList<>();

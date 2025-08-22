@@ -13,7 +13,6 @@ import roarbits.user.repository.UserRepository;
 
 import java.time.LocalTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -72,36 +71,26 @@ public class TimetableService {
                 .toList();
     }
 
-    // 시간표 수정
-    public TimetableResponseDto updateTimetable(Long userId, Long timetableId, TimetableRequestDto dto) {
-        Timetable timetable = timetableRepository.findByTimetableIdAndUser_Id(timetableId, userId)
-                .orElseThrow(() -> new IllegalArgumentException("시간표를 찾을 수 없습니다."));
+    // 메인 시간표 설정
+    public TimetableResponseDto setMainTimetable(Long userId, Long timetableId) {
+        Timetable tt = timetableRepository.findByTimetableIdAndUser_Id(timetableId, userId)
+                .orElseThrow(
+                        () -> new IllegalArgumentException("시간표를 찾을 수 없습니다."));
 
-        timetable.setPreferCredit(dto.getPreferCredit());
-        timetable.setPreferTime(dto.getPreferTime());
-        timetable.setMorningClassNum(dto.getMorningClassNum());
-        timetable.setFreePeriodNum(dto.getFreePeriodNum());
-        timetable.setEssentialCourse(dto.getEssentialCourse());
-        timetable.setGraduationRate(dto.getGraduationRate());
+        // 기존 메인 시간표 해제
+        timetableRepository.clearMainByUserId(userId);
 
-        // 기존 슬롯 제거 후 새로 설정
-        timeSlotRepository.deleteByTimetable(timetable);
+        // 새로운 메인 시간표 설정
+        tt.setMain(true);
 
-        List<TimeSlot> updatedSlots = dto.getTimeSlots().stream().map(slotDto -> {
-            Subject subject = subjectRepository.findById(slotDto.getSubjectId())
-                    .orElseThrow(() -> new IllegalArgumentException("과목을 찾을 수 없습니다."));
+        return toResponseDto(tt);
+    }
 
-            return TimeSlot.builder()
-                    .timetable(timetable)
-                    .subject(subject)
-                    .day(slotDto.getDay())
-                    .startTime(LocalTime.parse(slotDto.getStartTime()))
-                    .endTime(LocalTime.parse(slotDto.getEndTime()))
-                    .build();
-        }).toList();
-
-        timetable.setTimeSlots(updatedSlots);
-        return toResponseDto(timetable);
+    // 메인 시간표 조회
+    public TimetableResponseDto getMainTimetable(Long userId) {
+        Timetable tt = timetableRepository.findByUser_IdAndIsMainTrue(userId)
+                .orElseThrow(() -> new IllegalArgumentException("메인 시간표가 설정되어 있지 않습니다."));
+        return toResponseDto(tt);
     }
 
     // 시간표 삭제

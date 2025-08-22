@@ -39,6 +39,19 @@ public class TimetableController {
         return ResponseEntity.ok(timetableService.getTimetablesByUser(userId));
     }
 
+    // 메인 시간표 조회
+    @GetMapping("/me/main")
+    @Operation(
+            summary = "메인 시간표 조회",
+            description = "현재 로그인된 사용자의 메인 시간표를 조회합니다.",
+            security = { @SecurityRequirement(name = "Authorization")})
+    public ResponseEntity<TimetableResponseDto> getMainTimetable(
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal(expression = "id") Long userId
+    ) {
+        return ResponseEntity.ok(timetableService.getMainTimetable(userId));
+    }
+
     // 시간표 생성
     @PostMapping
     @Operation(
@@ -55,21 +68,19 @@ public class TimetableController {
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
-    // 시간표 수정
-    @PutMapping("/{timetableId}")
+    // 메인 시간표 설정
+    @PutMapping("/{timetableId}/main")
     @Operation(
-            summary = "시간표 수정",
-            description = "현재 로그인된 사용자의 시간표를 수정합니다.",
+            summary = "메인 시간표 설정",
+            description = "지정한 시간표를 현재 로그인 사용자의 메인 시간표로 설정합니다. 기존 메인은 해제됩니다.",
             security = { @SecurityRequirement(name = "Authorization")})
-    public ResponseEntity<TimetableResponseDto> updateTimetable(
+    public ResponseEntity<TimetableResponseDto> setMainTimetable(
             @Parameter(hidden = true)
             @AuthenticationPrincipal(expression = "id") Long userId,
-            @Parameter(description = "수정할 시간표 ID") @PathVariable Long timetableId,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "수정할 시간표 정보")
-            @Valid @org.springframework.web.bind.annotation.RequestBody TimetableRequestDto requestDto
+            @Parameter(description = "메인으로 설정할 시간표 ID") @PathVariable Long timetableId
     ) {
-        var updated = timetableService.updateTimetable(userId, timetableId, requestDto);
-        return ResponseEntity.ok(updated);
+        var main = timetableService.setMainTimetable(userId, timetableId);
+        return ResponseEntity.ok(main);
     }
 
     // 시간표 삭제
