@@ -36,6 +36,7 @@ public class TimetableService {
                 .freePeriodNum(dto.getFreePeriodNum())
                 .essentialCourse(dto.getEssentialCourse())
                 .graduationRate(dto.getGraduationRate())
+                .category(dto.getCategory())
                 .build();
 
         List<TimeSlot> timeSlots = dto.getTimeSlots().stream().map(slotDto -> {

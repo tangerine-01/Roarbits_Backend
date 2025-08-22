@@ -2,6 +2,7 @@ package roarbits.timetable.dto;
 
 import lombok.*;
 
+import java.time.LocalTime;
 import java.util.List;
 
 @Getter
@@ -18,6 +19,7 @@ public class TimetableResponseDto {
     private Integer freePeriodNum; // 자유 시간 수
     private String essentialCourse; // 필수 과목
     private Double graduationRate; // 졸업률
+    private String category;
 
     private List<TimeSlotDto> timeSlots; // 시간표에 포함된 과목들
 }
