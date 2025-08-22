@@ -12,6 +12,8 @@ import roarbits.community.repository.CommunityPostRepository;
 import roarbits.community.repository.CommunityCommentRepository;
 import roarbits.user.entity.User;
 import roarbits.user.repository.UserRepository;
+import org.springframework.web.server.ResponseStatusException;
+import static org.springframework.http.HttpStatus.*;
 
 import java.time.LocalDateTime;
 
@@ -29,7 +31,7 @@ public class CommunityServiceImpl implements CommunityService {
     @Transactional
     public CommunityResponseDto.Post createPost(Long userId, CommunityRequestDto.CreatePost req) {
         User writer = userRepo.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("작성자 정보를 찾을 수 없습니다."));
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "작성자 정보를 찾을 수 없습니다."));
 
         CommunityPost post = CommunityPost.builder()
                 .title(req.getTitle())
@@ -48,7 +50,7 @@ public class CommunityServiceImpl implements CommunityService {
     @Override
     public CommunityResponseDto.Post getPost(Long postId) {
         CommunityPost post = postRepo.findByIdAndIsDeletedFalse(postId)
-                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "게시글을 찾을 수 없습니다."));
         return toPostDto(post);
     }
 
@@ -60,7 +62,7 @@ public class CommunityServiceImpl implements CommunityService {
 
         //작성자 확인
         if (post.getWriter() == null || !post.getWriter().getId().equals(writerId)) {
-            throw new IllegalArgumentException("작성자만 게시글을 수정할 수 있습니다.");
+            throw new ResponseStatusException(FORBIDDEN, "작성자만 게시글을 수정할 수 있습니다.");
         }
 
         post.setTitle(req.getTitle());
@@ -74,9 +76,19 @@ public class CommunityServiceImpl implements CommunityService {
     @Override
     @Transactional
     public void deletePost(Long postId, Long userId) {
+        var postOpt = postRepo.findByIdAndIsDeletedFalse(postId);
+        if (postOpt.isEmpty()) {
+            throw new ResponseStatusException(NOT_FOUND, "게시글을 찾을 수 없습니다.");
+        }
+
+        if (!postOpt.get().getWriter().getId().equals(userId)) {
+            throw new ResponseStatusException(FORBIDDEN, "작성자만 게시글을 삭제할 수 있습니다.");
+        }
+
         int updated = postRepo.softDeleteByIdAndWriter_Id(postId, userId);
-        if (updated == 0)
-            throw new AccessDeniedException("작성자만 게시글을 삭제할 수 있습니다.");
+        if (updated == 0) {
+            throw new ResponseStatusException(CONFLICT, "이미 삭제되었거나 삭제할 수 없는 게시글입니다.");
+        }
     }
 
     // Comment
@@ -84,10 +96,10 @@ public class CommunityServiceImpl implements CommunityService {
     @Transactional
     public CommunityResponseDto.Comment createComment(Long userId, CommunityRequestDto.CreateComment req) {
         User writer = userRepo.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("작성자 정보를 찾을 수 없습니다."));
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "작성자 정보를 찾을 수 없습니다."));
 
         CommunityPost post = postRepo.findByIdAndIsDeletedFalse(req.getPostId())
-                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "게시글을 찾을 수 없습니다."));
 
         CommunityComment comment = CommunityComment.builder()
                 .content(req.getContent())
@@ -109,7 +121,7 @@ public class CommunityServiceImpl implements CommunityService {
 
         //작성자 확인
         if (!comment.getWriter().getId().equals(userId)) {
-            throw new IllegalArgumentException("작성자만 댓글을 수정할 수 있습니다.");
+            throw new ResponseStatusException(FORBIDDEN, "작성자만 댓글을 수정할 수 있습니다.");
         }
 
         comment.setContent(req.getContent());
@@ -126,7 +138,7 @@ public class CommunityServiceImpl implements CommunityService {
 
     //Helper
     private CommunityResponseDto.Post toPostDto(CommunityPost post) {
-        long cnt = commentRepo.countByPostId(post.getId());
+        long cnt = commentRepo.countByPostIdAndIsDeletedFalse(post.getId());
         return CommunityResponseDto.Post.from(post, Math.toIntExact(cnt));
     }
 }

@@ -1,5 +1,6 @@
 package roarbits.community.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -11,13 +12,17 @@ import io.swagger.v3.oas.annotations.Parameter;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import roarbits.community.dto.CommunityRequestDto;
 import roarbits.community.dto.CommunityResponseDto;
 import roarbits.community.service.CommunityService;
 
+import java.net.URI;
+
 @RestController
 @RequestMapping("/api/community/posts")
 @RequiredArgsConstructor
+@Tag(name = "CommunityPost", description = "커뮤니티 게시글 관련 API")
 @SecurityRequirement(name = "bearerAuth")
 
 public class CommunityPostController {
@@ -33,7 +38,10 @@ public class CommunityPostController {
             @Parameter(hidden = true)
             @AuthenticationPrincipal(expression = "id") Long userId,
             @Valid @RequestBody CommunityRequestDto.CreatePost req) {
-        return ResponseEntity.ok(communityService.createPost(userId, req));
+        if(userId == null) throw new UnauthorizedException("로그인이 필요합니다.");
+        var created = communityService.createPost(userId, req);
+        URI location = URI.create("/api/community/posts/" + created.getId());
+        return ResponseEntity.created(location).body(created);
     }
 
     // 게시글 조회
