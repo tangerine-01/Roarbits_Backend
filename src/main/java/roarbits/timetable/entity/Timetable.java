@@ -26,6 +26,17 @@ public class Timetable {
     @Column(name = "is_main", nullable = false)
     private boolean isMain;
 
+    @Column(name = "category", length = 30)
+    private String category;
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
     public void setMain(boolean main) { this.isMain = main; }
     public boolean isMain() { return isMain; }
 
