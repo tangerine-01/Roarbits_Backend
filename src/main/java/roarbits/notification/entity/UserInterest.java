@@ -3,6 +3,8 @@ package roarbits.notification.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "user_interest",
         uniqueConstraints = @UniqueConstraint(
@@ -15,7 +17,6 @@ import lombok.*;
         }
 )
 @Getter
-@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
@@ -31,15 +32,21 @@ public class UserInterest {
     @JoinColumn(name = "subject_id", nullable = false)
     private Long subjectId;
 
-    @Column(nullable = false)
-    private boolean enabled;
+    @Builder.Default
+    @Column(name = "interest_type", nullable = false, length = 50)
+    private String interestType = "SUBJECT";
 
-    @Column(nullable = false)
-    private String category;
+    @Builder.Default
+    @Column(name="enabled", nullable=false)
+    private boolean enabled = true;
 
-    public UserInterest(Long userId, Long subjectId) {
-        this.userId = userId;
-        this.subjectId = subjectId;
-        this.enabled = true;
+    @Builder.Default
+    @Column(name="created_at", nullable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @PrePersist
+    void prePersist() {
+        if (interestType == null || interestType.isBlank()) interestType = "SUBJECT";
+        if (createdAt == null) createdAt = java.time.LocalDateTime.now();
     }
 }

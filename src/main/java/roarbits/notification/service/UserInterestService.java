@@ -50,7 +50,7 @@ public class UserInterestService {
         }
         if (repository.existsByUserIdAndSubjectId(userId, subjectId)) return;
         try {
-            repository.save(UserInterest.builder()
+            repository.saveAndFlush(UserInterest.builder()
                     .userId(userId)
                     .subjectId(subjectId)
                     .build());

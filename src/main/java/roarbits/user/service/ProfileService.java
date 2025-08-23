@@ -80,9 +80,15 @@ public class ProfileService {
 
     @Transactional
     public void saveStep3(Long userId, GraduationType graduationType) {
+        if (graduationType == null) {
+            throw new IllegalArgumentException("GraduationType cannot be null");
+        }
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found: " + userId));
         Profile profile = findOrCreateProfile(user);
+        if (graduationType.equals(profile.getGraduationType())) {
+            return;
+        }
         profile.setGraduationType(graduationType);
         profileRepository.save(profile);
     }

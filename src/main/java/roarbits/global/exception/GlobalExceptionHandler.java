@@ -25,6 +25,7 @@ import roarbits.login.exception.DuplicateEmailException;
 import roarbits.subject.exception.SubjectNotFoundException;
 
 import java.util.NoSuchElementException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 record ErrorResponse(String code, String message, String field) {}
 
@@ -46,7 +47,6 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.onFailure(errorCode, null));
     }
 
-    // 추가적인 예외 처리용(4xx)
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<ErrorResponse> handleResponseStatus(ResponseStatusException e) {
         log.warn("ResponseStatusException: {}", e.getReason());
@@ -94,45 +94,49 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse("BAD_REQUEST", "요청 형식이 올바르지 않습니다.", null));
     }
 
-    // 지원하지 않는 매서드/미디어 타입
-    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    // 405 전용
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<ErrorResponse> handleMethodNotSupported(HttpRequestMethodNotSupportedException e) {
         return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
                 .body(new ErrorResponse("METHOD_NOT_ALLOWED", e.getMessage(), null));
     }
 
+    // 415 전용
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
     public ResponseEntity<ErrorResponse> handleMediaType(HttpMediaTypeNotSupportedException e) {
         return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
                 .body(new ErrorResponse("UNSUPPORTED_MEDIA_TYPE", e.getMessage(), null));
     }
 
-    // 존재하지 않음
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoResource(NoResourceFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse("NOT_FOUND", e.getMessage(), null));
+    }
+
+
     @ExceptionHandler({NoSuchElementException.class, EntityNotFoundException.class})
     public ResponseEntity<ErrorResponse> handleNotFound(Exception e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(new ErrorResponse("NOT_FOUND", e.getMessage(), null));
     }
 
-    // 제약 위반 -> 409
     @ExceptionHandler({DataIntegrityViolationException.class, ConstraintViolationException.class})
     public ResponseEntity<ErrorResponse> handleConflict(Exception e) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(new ErrorResponse("CONFLICT", "제약 조건 위반으로 처리할 수 없습니다.", null));
     }
 
-    // 잘못된 인자 -> 400
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new ErrorResponse("BAD_REQUEST", e.getMessage(), null));
     }
 
-    // 그 외 모든 예외 -> 500
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnknown(Exception e) {
         String errId = java.util.UUID.randomUUID().toString().substring(0,8);
-        log.error("Unhandled exception", errId, e);
+        log.error("Unhandled exception id={}", errId, e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ErrorResponse("INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다.", null));
     }

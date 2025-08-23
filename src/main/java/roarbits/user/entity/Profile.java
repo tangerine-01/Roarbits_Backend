@@ -25,6 +25,7 @@ public class Profile {
     private Integer enrollmentYear;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "graduation_type", nullable = false)
     private GraduationType graduationType;
 
     @OneToMany(mappedBy = "profile",

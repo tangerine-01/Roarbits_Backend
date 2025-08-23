@@ -31,6 +31,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 public class ProfileController {
     private final ProfileService profileService;
 
+
     @PostMapping(
             value = "/step1",
             consumes = MediaType.APPLICATION_JSON_VALUE,
@@ -90,15 +91,12 @@ public class ProfileController {
 
     public static class Step4Request {
         private List<CourseItem> completedCourses;
-        public List<CourseItem> getCompletedCourses() { return completedCourses; }   // [MOD]
-        public void setCompletedCourses(List<CourseItem> completedCourses) { this.completedCourses = completedCourses; } // [MOD]
+        public List<CourseItem> getCompletedCourses() { return completedCourses; }
     }
 
     public static class CourseItem {
         private String courseCode;
         private String courseTitle;
-        public String getCourseCode() { return courseCode; }
-        public void setCourseCode(String courseCode) { this.courseCode = courseCode; } // [MOD]
         public String getCourseTitle() { return courseTitle; }
         public void setCourseTitle(String courseTitle) { this.courseTitle = courseTitle; } // [MOD]
     }
@@ -121,7 +119,6 @@ public class ProfileController {
                 (req != null && req.getCompletedCourses() != null ? req.getCompletedCourses() : List.<CourseItem>of())
                 .stream()
                 .map(d -> CompletedCourse.builder()
-                        .courseCode(d.getCourseCode())
                         .courseTitle(d.getCourseTitle())
                         .build())
                 .collect(Collectors.toList());

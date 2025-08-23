@@ -1,8 +1,7 @@
 package roarbits.user.entity;
 
 public enum GraduationType {
-    UNDERGRAD,
-    POSTGRAD,
-    TRANSFER,
-    ETC
+    GENERAL,
+    DOUBLE_MAJOR,
+    MINOR
 }

@@ -1,10 +1,12 @@
 package roarbits.user.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import roarbits.user.entity.GraduationType;
 import java.util.List;
+import jakarta.validation.constraints.NotNull;
 
 @Getter
 @Setter
@@ -22,7 +24,8 @@ public class ProfileDto {
     @NotNull(message = "입학년도를 입력해주세요")
     private Integer enrollmentYear;
 
-    @NotNull(message = "졸업 유형을 선택해주세요")
+    @NotNull
+    @Schema(description = "졸업 유형을 선택해주세요", allowableValues = {"GENERAL", "DOUBLE_MAJOR", "MINOR"})
     private GraduationType graduationType;
 
     @Valid
