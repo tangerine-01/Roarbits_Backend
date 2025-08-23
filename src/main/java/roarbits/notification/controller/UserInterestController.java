@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.server.ResponseStatusException;
+import roarbits.notification.dto.UserInterestResponseDto;
 import roarbits.notification.service.UserInterestService;
 
 import java.util.List;
@@ -23,16 +25,16 @@ public class UserInterestController {
     private final UserInterestService service;
 
     // 관심 알림 설정 등록 또는 수정
-    @PostMapping("/subjects/{subjectId}")
+    @PostMapping("/api/interest/subjects/{subjectId}")
     @Operation(
-            summary = "관심 알림 설정 등록 또는 수정",
-            description = "사용자의 관심 알림 설정을 등록하거나 수정합니다. 이미 존재하는 경우에는 아무 작업도 하지 않습니다.",
+            summary = "관심 과목 등록/수정",
             security = { @SecurityRequirement(name = "Authorization")})
-    public ResponseEntity<Void> add(
+    public ResponseEntity<UserInterestResponseDto> upsertSubjectInterest(
             @AuthenticationPrincipal(expression = "id") Long userId,
-            @PathVariable Long subjectId) {
-        service.saveOrUpdateInterest(userId, subjectId);
-        return ResponseEntity.noContent().build();
+            @PathVariable Long subjectId
+    ) {
+        if (userId == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
+        return ResponseEntity.ok(service.upsertSubjectInterest(userId, subjectId));
     }
 
     // 사용자 관심 목록 조회

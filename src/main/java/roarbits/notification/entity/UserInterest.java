@@ -15,6 +15,7 @@ import lombok.*;
         }
 )
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
@@ -29,4 +30,16 @@ public class UserInterest {
 
     @JoinColumn(name = "subject_id", nullable = false)
     private Long subjectId;
+
+    @Column(nullable = false)
+    private boolean enabled;
+
+    @Column(nullable = false)
+    private String category;
+
+    public UserInterest(Long userId, Long subjectId) {
+        this.userId = userId;
+        this.subjectId = subjectId;
+        this.enabled = true;
+    }
 }
