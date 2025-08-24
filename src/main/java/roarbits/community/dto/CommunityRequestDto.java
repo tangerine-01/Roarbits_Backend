@@ -7,9 +7,9 @@ import roarbits.community.entity.PostType;
 public class CommunityRequestDto {
     @Getter @Setter @NoArgsConstructor
     public static class CreatePost {
-        @NotBlank private String title;
-        @NotBlank private String content;
-        private PostType type;
+        @NotBlank(message = "제목은 필수입니다.") @Size(max = 100) private String title;
+        @NotBlank(message = "내용은 필수입니다.") @Size(max = 5000) private String content;
+        @NotNull(message = "카테고리(type)는 필수입니다.") private PostType type;
     }
 
     @Getter @Setter @NoArgsConstructor

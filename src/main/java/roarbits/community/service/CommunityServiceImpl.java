@@ -1,7 +1,6 @@
 package roarbits.community.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import roarbits.community.dto.CommunityRequestDto;
@@ -19,7 +18,7 @@ import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+@Transactional
 public class CommunityServiceImpl implements CommunityService {
 
     private final CommunityPostRepository postRepo;
@@ -43,7 +42,11 @@ public class CommunityServiceImpl implements CommunityService {
                 .updatedAt(LocalDateTime.now())
                 .build();
 
-        postRepo.save(post);
+        try {
+            postRepo.save(post);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            throw new ResponseStatusException(CONFLICT, "제약 조건 위반으로 저장할 수 없습니다.");
+        }
         return toPostDto(post);
     }
 
@@ -58,7 +61,7 @@ public class CommunityServiceImpl implements CommunityService {
     @Transactional
     public CommunityResponseDto.Post updatePost(Long postId, Long writerId, CommunityRequestDto.UpdatePost req) {
         CommunityPost post = postRepo.findByIdAndIsDeletedFalse(postId)
-                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "게시글을 찾을 수 없습니다."));
 
         //작성자 확인
         if (post.getWriter() == null || !post.getWriter().getId().equals(writerId)) {
@@ -131,9 +134,15 @@ public class CommunityServiceImpl implements CommunityService {
     @Override
     @Transactional
     public void deleteComment(Long commentId, Long userId) {
+        var c = commentRepo.findByIdAndIsDeletedFalse(commentId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "댓글을 찾을 수 없습니다."));
+        if (!c.getWriter().getId().equals(userId)) {
+            throw new ResponseStatusException(FORBIDDEN, "작성자만 댓글을 삭제할 수 있습니다.");
+        }
         int updated = commentRepo.softDeleteByIdAndWriter_Id(commentId, userId);
-        if (updated == 0)
-            throw new AccessDeniedException("작성자만 댓글을 삭제할 수 있습니다.");
+        if (updated == 0) {
+            throw new ResponseStatusException(CONFLICT, "이미 삭제되었거나 삭제할 수 없는 댓글입니다.");
+        }
     }
 
     //Helper
