@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.server.ResponseStatusException;
+import roarbits.onboarding.dto.StepFlags;
 import roarbits.user.entity.CompletedCourse;
 import roarbits.user.dto.ProfileDto;
 import roarbits.user.service.ProfileService;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import roarbits.onboarding.service.OnboardingService;
 
 @RestController
 @RequestMapping("/api/profiles")
@@ -30,6 +32,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 @PreAuthorize("isAuthenticated()")
 public class ProfileController {
     private final ProfileService profileService;
+    private final OnboardingService onboardingService;
 
 
     @PostMapping(
@@ -46,6 +49,7 @@ public class ProfileController {
         if (me == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다");
         Long userId = me.getId();
         profileService.saveStep1(userId, dto.getUniversity(), dto.getMajor());
+        StepFlags steps = onboardingService.refreshAndGetFlags(userId);
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(Map.of("status", "ok", "step", 1, "message", "profile step1 saved"));
@@ -92,13 +96,16 @@ public class ProfileController {
     public static class Step4Request {
         private List<CourseItem> completedCourses;
         public List<CourseItem> getCompletedCourses() { return completedCourses; }
+        public void setCompletedCourses(List<CourseItem> completedCourses) {this.completedCourses = completedCourses; }
     }
 
     public static class CourseItem {
         private String courseCode;
         private String courseTitle;
+        public String getCourseCode() { return courseCode; }
         public String getCourseTitle() { return courseTitle; }
-        public void setCourseTitle(String courseTitle) { this.courseTitle = courseTitle; } // [MOD]
+        public void setCourseTitle(String courseTitle) { this.courseTitle = courseTitle; }
+        public void setCourseCode(String courseCode) { this.courseCode = courseCode; }
     }
 
 
@@ -114,6 +121,7 @@ public class ProfileController {
             @RequestBody Step4Request req
     ) {
         if (me == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다");
+        final Long userId = me.getId();
 
         List<CompletedCourse> courses =
                 (req != null && req.getCompletedCourses() != null ? req.getCompletedCourses() : List.<CourseItem>of())
@@ -124,13 +132,15 @@ public class ProfileController {
                 .collect(Collectors.toList());
 
         profileService.saveStep4(me.getId(), courses);
+        StepFlags steps = onboardingService.refreshAndGetFlags(userId);
 
         boolean done = profileService.isProfileCompleted(me.getId());
 
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(Map.of("status","ok","step",4,"count", courses.size(),
-                        "isCompleted", done, "message","profile step4 saved"));
+                        "isCompleted", steps.isCompleted(),
+                        "steps", steps, "message","profile step4 saved"));
     }
 
     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)

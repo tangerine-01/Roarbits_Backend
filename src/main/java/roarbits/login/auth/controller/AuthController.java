@@ -63,7 +63,7 @@ public class AuthController {
         Long userId = userRepository.findByEmailIgnoreCase(email)
                 .map(roarbits.user.entity.User::getId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "<UNK> <UNK> <UNK> <UNK>"));
-        StepFlags steps = onboardingService.getFlags(userId);
+        StepFlags steps = onboardingService.refreshAndGetFlags(userId);
         response.setSteps(steps);
         return ResponseEntity.ok(response);
     }
