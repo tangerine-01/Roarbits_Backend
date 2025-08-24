@@ -11,6 +11,9 @@ import reactor.core.publisher.Mono;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 
 import java.util.List;
 import java.util.Map;
@@ -64,7 +67,16 @@ public class AiRecommendationService {
     private Mono<? extends Throwable> toApiError(ClientResponse response) {
         return response.bodyToMono(String.class)
                 .defaultIfEmpty("API 요청 실패: 응답 본문이 비어 있습니다.")
-                .flatMap(errorBody -> Mono.error(new RuntimeException("API 요청 실패: " + errorBody)));
+                .flatMap(body -> {
+                    HttpStatusCode st = response.statusCode();
+                    if (st.is5xxServerError()) {
+                        return  Mono.error(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "AI 서비스가 일시적으로 중단되었습니다. 잠시 후 다시 시도해주세요."));
+                    }
+                    if (st.value() == 429) {
+                        return Mono.error(new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "AI 서비스 요청 한도를 초과했습니다. 잠시 후 다시 시도해주세요."));
+                    }
+                    return Mono.error(new ResponseStatusException(st, "API 요청 실패: " + body));
+                });
     }
 
     private List<String> extractTextList(String response) {

@@ -10,12 +10,11 @@ import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import reactor.netty.http.client.HttpClient;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import java.util.Map;
 import java.time.Duration;
 
 @Configuration
 public class GeminiConfig {
-    @Value("%{gemini.api.key}")
+    @Value("${gemini.api.key}")
     private String geminiApiKey;
 
     @Bean
@@ -31,7 +30,15 @@ public class GeminiConfig {
         return WebClient.builder()
                 .baseUrl("https://generativelanguage.googleapis.com")
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
-                .defaultUriVariables(Map.of("key", geminiApiKey))
                 .build();
+    }
+
+    @Bean
+    public Runnable geminiConfigSelfCheck() {
+        return () -> {
+            if (geminiApiKey == null || geminiApiKey.isBlank()) {
+                System.err.println("WARNING: Gemini API key is not set. AI features will not work.");
+            }
+        };
     }
 }
