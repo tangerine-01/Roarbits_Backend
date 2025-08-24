@@ -19,10 +19,10 @@ public class CommunityPost {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 260)
+    @Column(nullable = false, length = 200)
     private String title;
 
-    @Column(nullable = false, length = 1000)
+    @Column(nullable = false, length = 5000)
     private String content;
 
     @Builder.Default
@@ -33,21 +33,8 @@ public class CommunityPost {
     private User writer;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 30)
+    @Column(nullable = false)
     private PostType type;
-
-    /*
-    // 위치, 시간, 모집 인원
-    @Column
-    private Double lat;
-
-    @Column
-    private Double lng;
-
-    private LocalDateTime meetTime;
-
-    private Integer maxParticipants;
-    */
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

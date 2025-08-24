@@ -31,10 +31,14 @@ public class CommunityServiceImpl implements CommunityService {
     @Override
     @Transactional
     public CommunityResponseDto.Post createPost(Long userId, CommunityRequestDto.CreatePost req) {
-        User writer = userRepo.findById(userId)
+        var writer = userRepo.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "작성자 정보를 찾을 수 없습니다."));
 
-        CommunityPost post = CommunityPost.builder()
+        if (req.getType() == null) {
+            req.setType(PostType.GENERAL);
+        }
+
+        var post = CommunityPost.builder()
                 .title(req.getTitle())
                 .content(req.getContent())
                 .writer(writer)
@@ -45,7 +49,7 @@ public class CommunityServiceImpl implements CommunityService {
                 .build();
 
         try {
-            postRepo.save(post);
+            postRepo.saveAndFlush(post);
         } catch (org.springframework.dao.DataIntegrityViolationException e) {
             throw new ResponseStatusException(CONFLICT, "제약 조건 위반으로 저장할 수 없습니다.");
         }
