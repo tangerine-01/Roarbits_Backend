@@ -13,6 +13,8 @@ public class LoginResponse {
     private String accessToken;
     private String refreshToken;
     private StepFlags steps;
+    private Long userId;
+    private String name;
 
 
     public LoginResponse(String accessToken, String refreshToken) {
@@ -21,4 +23,6 @@ public class LoginResponse {
         this.steps = null;
     }
     public void setSteps(StepFlags s) { this.steps = s; }
+    public void setUserId(Long userId) { this.userId = userId; }
+    public void setName(String name) { this.name = name; }
 }

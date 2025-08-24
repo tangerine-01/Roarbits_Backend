@@ -24,6 +24,8 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
     private Long id;
+
+    @Column(nullable = false, length = 100)
     private String email;
 
     @JsonIgnore
@@ -50,6 +52,11 @@ public class User implements UserDetails {
     @com.fasterxml.jackson.annotation.JsonIgnore
     private Profile profile;
 
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean withdrawn = false;
+    private LocalDateTime withdrawnAt;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles.stream()
@@ -65,9 +72,6 @@ public class User implements UserDetails {
         return id;
     }
 
-    @Column(nullable = false)
-    private boolean withdrawn = false;
-    private LocalDateTime withdrawnAt;
 
     @Override
     public String getPassword() {
@@ -91,6 +95,13 @@ public class User implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return !withdrawn;
+    }
+
+    public void markWithdrawn() {
+        if (!this.withdrawn) {
+            this.withdrawn = true;
+            this.withdrawnAt = LocalDateTime.now();
+        }
     }
 }

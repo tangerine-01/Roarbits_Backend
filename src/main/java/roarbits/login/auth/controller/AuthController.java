@@ -24,6 +24,7 @@ import roarbits.login.service.AuthService;
 import roarbits.user.dto.SignUpRequest;
 import roarbits.user.dto.SignUpResponse;
 import roarbits.user.repository.UserRepository;
+import roarbits.user.entity.User;
 
 import roarbits.onboarding.dto.StepFlags;
 import roarbits.onboarding.service.OnboardingService;
@@ -60,11 +61,15 @@ public class AuthController {
         final String email = (loginRequest.getEmail() == null ? "" : loginRequest.getEmail().trim().toLowerCase(Locale.ROOT));
         final LoginRequest normReq = new LoginRequest(email, loginRequest.getPassword());
         LoginResponse response = authService.login(normReq);
-        Long userId = userRepository.findByEmailIgnoreCase(email)
-                .map(roarbits.user.entity.User::getId)
+
+        User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "<UNK> <UNK> <UNK> <UNK>"));
+        Long userId = user.getId();
+        String name = user.getName();
         StepFlags steps = onboardingService.refreshAndGetFlags(userId);
         response.setSteps(steps);
+        response.setUserId(userId);
+        response.setName(name);
         return ResponseEntity.ok(response);
     }
 

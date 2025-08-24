@@ -5,7 +5,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import roarbits.user.entity.User;
 import roarbits.user.repository.UserRepository;
 
 @Service
@@ -14,12 +13,14 @@ public class CustomUserDetailsService implements UserDetailsService {
     private final UserRepository userRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String username)
-            throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(username)
-                .orElseThrow(() ->
-                        new UsernameNotFoundException("User not found: " + username)
-                );
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        var user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found" + email));
+
+            if (!user.isEnabled()) {
+                throw new org.springframework.security.authentication.DisabledException("User disabled");
+        }
         return user;
+
     }
 }
