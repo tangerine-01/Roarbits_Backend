@@ -31,12 +31,17 @@ public class AiController {
     ) {
         if (userId == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
 
-        TimetableResponseDto main = timetableService.getMainTimetable(userId);
+        var main = timetableService.getMainTimetableOptional(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "등록된 시간표가 없습니다."));
 
-        String scheduleJson = toCompactScheduleJson(main);
+        String scheduleJson;
+        try {
+            scheduleJson = objectMapper.writeValueAsString(main);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "시간표 직렬화 실패", e);
+        }
 
-        var result = aiRecommendationService.generateRecommendation(scheduleJson);
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(aiRecommendationService.generateRecommendation(scheduleJson));
     }
 
     private String toCompactScheduleJson(TimetableResponseDto tt) {

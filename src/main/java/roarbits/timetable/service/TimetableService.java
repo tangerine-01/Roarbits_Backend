@@ -12,7 +12,7 @@ import roarbits.user.entity.User;
 import roarbits.user.repository.UserRepository;
 
 import java.time.LocalTime;
-import java.util.List;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -94,6 +94,11 @@ public class TimetableService {
         Timetable tt = timetableRepository.findByUser_IdAndIsMainTrue(userId)
                 .orElseThrow(() -> new IllegalArgumentException("메인 시간표가 설정되어 있지 않습니다."));
         return toResponseDto(tt);
+    }
+
+    public Optional<TimetableResponseDto> getMainTimetableOptional(Long userId) {
+        return timetableRepository.findByUser_IdAndIsMainTrue(userId)
+                .map(this::toResponseDto);
     }
 
     // 시간표 삭제
