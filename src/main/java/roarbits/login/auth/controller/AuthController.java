@@ -1,5 +1,6 @@
 package roarbits.login.auth.controller;
 
+import jakarta.annotation.security.PermitAll;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,7 @@ import roarbits.user.repository.UserRepository;
 
 import roarbits.onboarding.dto.StepFlags;
 import roarbits.onboarding.service.OnboardingService;
+import java.util.Locale;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -52,12 +54,15 @@ public class AuthController {
     }
 
 
+    @PermitAll
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest loginRequest) {
-        LoginResponse response = authService.login(loginRequest);
-        Long userId = userRepository.findByEmail(loginRequest.getEmail())
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
+        final String email = (loginRequest.getEmail() == null ? "" : loginRequest.getEmail().trim().toLowerCase(Locale.ROOT));
+        final LoginRequest normReq = new LoginRequest(email, loginRequest.getPassword());
+        LoginResponse response = authService.login(normReq);
+        Long userId = userRepository.findByEmailIgnoreCase(email)
                 .map(roarbits.user.entity.User::getId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "<UNK> <UNK> <UNK> <UNK>"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "<UNK> <UNK> <UNK> <UNK>"));
         StepFlags steps = onboardingService.getFlags(userId);
         response.setSteps(steps);
         return ResponseEntity.ok(response);

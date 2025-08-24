@@ -13,33 +13,35 @@ import roarbits.notification.repository.UserInterestRepository;
 import roarbits.subject.entity.Subject;
 import roarbits.subject.repository.SubjectRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 public class UserInterestService {
     private final SubjectRepository subjectRepository;
     private final UserInterestRepository repository;
 
+    @Transactional
     public UserInterestResponseDto upsertSubjectInterest(Long userId, Long subjectId) {
-        var subject = subjectRepository.findById(subjectId)
+        Subject subject = subjectRepository.findById(subjectId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "과목을 찾을 수 없습니다."));
 
-        String category = subject.getCategory();
-        if (category == null || category.isBlank()) {
-            category = deriveCategory(subject);
-            subject.setCategory(category);
-        }
+        String interestType = normalizeCategory(subject.getCategory(), subject);
 
-        var interest = repository.findByUserIdAndSubjectId(userId, subjectId)
-                .orElseGet(() -> new UserInterest(userId, subjectId));
+        UserInterest interest = repository.findByUserIdAndSubjectId(userId, subjectId)
+                .orElseGet(() -> repository.save(
+                        UserInterest.builder()
+                                .userId(userId)
+                                .subjectId(subjectId)
+                                .interestType(interestType)
+                                .enabled(true)
+                                .createdAt(LocalDateTime.now())
+                                .build()
+                ));
 
-        interest.setEnabled(true);
-        interest.setCategory(category);
-
-        var saved = repository.save(interest);
-        return UserInterestResponseDto.from(saved, subject.getName(), category);
+        return UserInterestResponseDto.from(interest, subject.getName(), interestType);
     }
 
     // 관심 알림 설정 등록 또는 수정
@@ -53,25 +55,35 @@ public class UserInterestService {
             repository.saveAndFlush(UserInterest.builder()
                     .userId(userId)
                     .subjectId(subjectId)
+                    .interestType("SUBJECT")
+                    .enabled(true)
+                    .createdAt(LocalDateTime.now())
                     .build());
         } catch (DataIntegrityViolationException e) {
+            String root = org.springframework.core.NestedExceptionUtils.getMostSpecificCause(e).getMessage();
+            if (root != null && root.toLowerCase().contains("duplicate")) return;
+            throw e;
         }
     }
 
-    // 관심 알림 삭제
     @Transactional
     public void deleteInterest(Long userId, Long subjectId) {
         long n = repository.deleteByUserIdAndSubjectId(userId, subjectId);
         if (n == 0) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "즐겨찾기 없음");
     }
 
-    // 즐겨찾기 여부 확인
     public boolean isInterest(Long userId, Long subjectId) {
         return repository.existsByUserIdAndSubjectId(userId, subjectId);
     }
 
     public List<Long> myInterestSubjectIds(Long userId) {
-        return repository.findAllByUserId(userId).stream().map(UserInterest::getSubjectId).toList();
+        return repository.findAllByUserId(userId).stream()
+                .map(UserInterest::getSubjectId).toList();
+    }
+
+    private String normalizeCategory(String category, Subject s) {
+        String c = (category == null || category.isBlank()) ? deriveCategory(s) : category;
+        return c.toUpperCase();
     }
 
     private String deriveCategory(Subject s) {

@@ -25,6 +25,9 @@ import roarbits.login.mapper.AuthMapper;
 import roarbits.login.exception.DuplicateEmailException;
 
 import java.time.LocalDateTime;
+import java.util.Locale;
+import java.time.Duration;
+
 
 @Service
 @RequiredArgsConstructor
@@ -38,15 +41,20 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthMapper authMapper;
 
+    private static String normalizeEmail(String e) {
+        return e == null ? "" : e.trim().toLowerCase(Locale.ROOT);
+    }
+
     @Transactional
     public SignUpResponse signUp(SignUpRequest req) {
+        final String email = normalizeEmail(req.getEmail());
         if (userRepository.existsByEmail(req.getEmail())) {
             throw new DuplicateEmailException(req.getEmail());
         }
         try {
             User newUser = userRepository.save(
                     User.builder()
-                            .email(req.getEmail())
+                            .email(email)
                             .password(passwordEncoder.encode(req.getPassword()))
                             .name(req.getName())
                             .build()
@@ -59,17 +67,18 @@ public class AuthService {
 
     @Transactional
     public LoginResponse login(LoginRequest req) {
+        final String email = normalizeEmail(req.getEmail());
         Authentication auth;
         try {
             auth = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(req.getEmail(), req.getPassword())
+                    new UsernamePasswordAuthenticationToken(email, req.getPassword())
             );
             SecurityContextHolder.getContext().setAuthentication(auth);
         } catch (org.springframework.security.core.AuthenticationException e) {
             throw new BadCredentialsException("이메일/비번 확인");
         }
 
-        User user = userRepository.findByEmail(req.getEmail())
+        User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new BadCredentialsException("이메일/비번 확인"));
         if (user.isWithdrawn()) {
             throw new BadCredentialsException("탈퇴한 계정입니다");
@@ -77,7 +86,9 @@ public class AuthService {
 
         String accessToken = jwtTokenProvider.generateAccessToken(auth);
         String refreshTokenValue = jwtTokenProvider.generateRefreshToken();
-        LocalDateTime expiry = LocalDateTime.now().plusDays(7);
+        long ms = jwtTokenProvider.getRefreshTokenExpirationMs();
+        LocalDateTime expiry = LocalDateTime.now().plus(Duration.ofMillis(ms));
+
 
         try {
             refreshTokenRepository.findByUser(user).ifPresentOrElse(rt -> {

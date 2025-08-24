@@ -26,6 +26,7 @@ public class JwtValidationFilter extends OncePerRequestFilter {
             "/api/auth/**",
             "/swagger-ui.html", "/swagger-ui/**",
             "/v3/api-docs", "/v3/api-docs/**",
+            "/api-docs", "/api-docs/**",
             "/actuator/health"
     );
     private final AntPathMatcher matcher = new AntPathMatcher();
@@ -49,59 +50,33 @@ public class JwtValidationFilter extends OncePerRequestFilter {
 
         if (!StringUtils.hasText(token)) {
             SecurityContextHolder.clearContext();
-            unauthorized(response, "Missing Bearer token");
+            chain.doFilter(request, response);
             return;
         }
 
         try {
-            if (!jwtTokenProvider.validateToken(token)) {
+            if (jwtTokenProvider.validateToken(token)) {
+                Authentication auth = jwtTokenProvider.getAuthentication(token);
+                if (auth != null) {
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                } else {
+                    SecurityContextHolder.clearContext();
+                }
+            } else {
                 SecurityContextHolder.clearContext();
-                unauthorized(response, "Invalid or expired token");
-                return;
             }
-
-            Authentication auth = jwtTokenProvider.getAuthentication(token);
-            if (auth == null) {
-                SecurityContextHolder.clearContext();
-                unauthorized(response, "Authentication failed");
-                return;
-            }
-            SecurityContextHolder.getContext().setAuthentication(auth);
-
-        } catch (io.jsonwebtoken.ExpiredJwtException e) {
-            SecurityContextHolder.clearContext();
-            log.warn("JWT expired: {}", e.getMessage());
-            unauthorized(response, "JWT expired");
-            return;
-
-        } catch (io.jsonwebtoken.security.SignatureException
-                | io.jsonwebtoken.MalformedJwtException
-                | io.jsonwebtoken.UnsupportedJwtException e){
-            SecurityContextHolder.clearContext();
-            log.warn("JWT invalid: {}", e.getMessage());
-            unauthorized(response, "JWT invalid");
-            return;
-
-        }catch (Exception e) {
-            SecurityContextHolder.clearContext();
+        } catch (Exception e) {
             log.warn("JWT validation error: {}", e.toString());
-            unauthorized(response, "Authentication failed");
-            return;
+            SecurityContextHolder.clearContext();
         }
         chain.doFilter(request, response);
     }
     private String resolveToken(HttpServletRequest request) {
         String h = request.getHeader("Authorization");
         if (!StringUtils.hasText(h)) return null;
-        if (h.startsWith("Bearer ")) return h.substring(7).trim();
+        if (h.regionMatches(true, 0, "Bearer ", 0, "Bearer ".length())) {
+            return h.substring("Bearer ".length()).trim();
+        }
         return null;
-    }
-
-    private void unauthorized(HttpServletResponse res, String msg) throws IOException {
-        res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        res.setCharacterEncoding("UTF-8");
-        res.setContentType("application/json");
-        res.setHeader("WWW-Authenticate", "Bearer error=\"invalid_token\"");
-        res.getWriter().write("{\"message\":\"" + msg + "\"}");
     }
 }

@@ -3,12 +3,14 @@ package roarbits.security;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.DelegatingPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -26,9 +28,41 @@ public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
 
+    private static final String[] SWAGGER_ROOT = {
+            "/v3/api-docs", "/swagger-ui.html", "/swagger-ui/**",
+            "/api-docs", "/api-docs/**"
+    };
+
+    private static final String[] SWAGGER_API = {
+            "/api/v3/api-docs/**", "/api/swagger-ui.html", "/api/swagger-ui/**"
+    };
+
     @Bean
+    @org.springframework.context.annotation.Primary
     public BCryptPasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        return new BackwardCompatibleBcrypt();
+    }
+
+    static class BackwardCompatibleBcrypt extends BCryptPasswordEncoder {
+
+        private final DelegatingPasswordEncoder delegating;
+
+        BackwardCompatibleBcrypt() {
+            super();
+            var encoders = new java.util.HashMap<String, org.springframework.security.crypto.password.PasswordEncoder>();
+            encoders.put("bcrypt", new BCryptPasswordEncoder());
+            this.delegating = new org.springframework.security.crypto.password.DelegatingPasswordEncoder("bcrypt", encoders);
+            this.delegating.setDefaultPasswordEncoderForMatches(new BCryptPasswordEncoder());
+        }
+
+        @Override
+        public boolean matches(CharSequence rawPassword, String encodedPassword) {
+            if (encodedPassword != null && encodedPassword.startsWith("{")) {
+                return delegating.matches(rawPassword, encodedPassword);
+            }
+            return super.matches(rawPassword, encodedPassword);
+        }
+
     }
 
     @Bean
@@ -63,6 +97,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/v3/api-docs/**").permitAll()
+                        .requestMatchers(SWAGGER_API).permitAll()
                         .requestMatchers("/api/interest/**").authenticated()
                         .requestMatchers("/api/course-histories/**").authenticated()
                         .anyRequest().authenticated()
@@ -98,6 +133,7 @@ public class SecurityConfig {
                                 "/api-docs", "/api-docs/**",
                                 "/actuator/health"
                         ).permitAll()
+                        .requestMatchers(SWAGGER_ROOT).permitAll()
                         .anyRequest().permitAll()
                 );
         return http.build();
