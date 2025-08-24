@@ -34,6 +34,10 @@ public class AiRecommendationService {
     private static final Pattern BULLET_PREFIX = Pattern.compile("^\\s*([-*•\\d\\.\\)]+)\\s*");
 
     public List<String> generateRecommendation(String scheduleJson) {
+        if (scheduleJson == null || scheduleJson.isBlank() || "{}".equals(scheduleJson.trim())) {
+            return List.of("추천 문구가 생성되지 않았습니다.");
+        }
+
         String prompt = SchedulePromptBuilder.build(scheduleJson)
                 + "\n다음 조건을 지켜서 3개의 행동 추천을 bullet 형식으로 제공해줘."
                 + "\n- 한 줄에 하나씩, 20~60자. \n- 실행 가능한 구체 동사로 시작.";
