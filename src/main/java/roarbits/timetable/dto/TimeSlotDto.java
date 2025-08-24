@@ -11,7 +11,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class TimeSlotDto {
-    @NotNull
+    @NotNull(message = "subjectId는 필수입니다.")
     private Long subjectId; // 과목 ID
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
@@ -47,4 +47,8 @@ public class TimeSlotDto {
     @Min(value = 0, message = "요일은 0(월요일)부터 6(일요일)까지의 값이어야 합니다.")
     @Max(value = 6, message = "요일은 0(월요일)부터 6(일요일)까지의 값이어야 합니다.")
     private Integer day; // 요일 (0: 월요일, 1: 화요일, ..., 6: 일요일)
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @Schema(accessMode = Schema.AccessMode.READ_ONLY)
+    private String category; // 과목 카테고리 (예: "전공", "교양")
 }

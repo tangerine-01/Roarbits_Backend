@@ -104,6 +104,12 @@ public class TimetableService {
     private TimetableResponseDto toResponseDto(Timetable timetable) {
         List<TimeSlotDto> slotDtos = timetable.getTimeSlots().stream().map(slot -> {
             Subject subject = slot.getSubject();
+
+            String category = subject.getCategory();
+            if (category == null || category.isEmpty()) {
+                category = "GENERAL";
+            }
+
             return TimeSlotDto.builder()
                     .subjectId(subject.getId())
                     .subjectName(subject.getName())
@@ -115,6 +121,7 @@ public class TimetableService {
                     .startTime(slot.getStartTime().toString())
                     .endTime(slot.getEndTime().toString())
                     .day(slot.getDay())
+                    .category(category)
                     .build();
         }).toList();
 

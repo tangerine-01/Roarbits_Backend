@@ -23,6 +23,8 @@ public class Subject {
     private String description;
     private String courseType;
     private String discipline;
+
+    @Column(name="category", length = 30)
     private String category;
 
     private Integer credit;
