@@ -32,7 +32,7 @@ public class CommunityServiceImpl implements CommunityService {
     @Override
     @Transactional
     public CommunityResponseDto.Post createPost(Long userId, CommunityRequestDto.CreatePost req) {
-        var writer = userRepo.findById(userId)
+        User writer = userRepo.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "작성자 정보를 찾을 수 없습니다."));
 
         CommunityPost post = CommunityPost.builder()

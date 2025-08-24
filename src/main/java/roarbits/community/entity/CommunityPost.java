@@ -25,7 +25,6 @@ public class CommunityPost {
     @Column(nullable = false, length = 5000)
     private String content;
 
-    @Builder.Default
     @Column(nullable = false)
     private boolean isDeleted = false;
 
