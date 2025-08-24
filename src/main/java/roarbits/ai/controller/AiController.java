@@ -31,7 +31,7 @@ public class AiController {
     ) {
         if (userId == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
 
-        var main = timetableService.getMainTimetableOptional(userId)
+        TimetableResponseDto main = timetableService.getMainTimetableOptional(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "등록된 시간표가 없습니다."));
 
         String scheduleJson;
