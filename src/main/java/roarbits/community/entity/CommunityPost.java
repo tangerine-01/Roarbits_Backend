@@ -26,6 +26,7 @@ public class CommunityPost {
     private String content;
 
     @Builder.Default
+    @Column(nullable = false)
     private boolean isDeleted = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -36,7 +37,10 @@ public class CommunityPost {
     @Column(nullable = false)
     private PostType type;
 
+    @Column(nullable = false)
     private LocalDateTime createdAt;
+
+    @Column(nullable = false)
     private LocalDateTime updatedAt;
 
     @Builder.Default
@@ -45,10 +49,10 @@ public class CommunityPost {
 
     @PrePersist
     void onCreate() {
-        LocalDateTime now = LocalDateTime.now();
-        this.createdAt = now;
-        this.updatedAt = now;
-        if(this.type == null) this.type = PostType.GENERAL;
+        var now = LocalDateTime.now();
+        if (createdAt == null) createdAt = now;
+        if(updatedAt == null) updatedAt = now;
+        if(this.type == null) type = PostType.GENERAL;
     }
 
     @PreUpdate

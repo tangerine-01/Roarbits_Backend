@@ -17,6 +17,7 @@ import static org.springframework.http.HttpStatus.*;
 import org.springframework.data.domain.*;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -34,26 +35,36 @@ public class CommunityServiceImpl implements CommunityService {
         var writer = userRepo.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "작성자 정보를 찾을 수 없습니다."));
 
-        if (req.getType() == null) {
-            req.setType(PostType.GENERAL);
-        }
-
-        var post = CommunityPost.builder()
+        CommunityPost post = CommunityPost.builder()
                 .title(req.getTitle())
                 .content(req.getContent())
                 .writer(writer)
                 .type(req.getType())
                 .isDeleted(false)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
                 .build();
 
         try {
             postRepo.saveAndFlush(post);
+            return toPostDto(post);
         } catch (org.springframework.dao.DataIntegrityViolationException e) {
-            throw new ResponseStatusException(CONFLICT, "제약 조건 위반으로 저장할 수 없습니다.");
+            throw new ResponseStatusException(CONFLICT, "제약 조건 위반으로 저장할 수 없습니다." + rootMsg(e));
+        } catch (org.springframework.http.converter.HttpMessageNotReadableException e) {
+            throw new ResponseStatusException(BAD_REQUEST, "잘못된 요청입니다.");
+        } catch (Exception e) {
+            org.slf4j.LoggerFactory.getLogger(getClass())
+                    .error("게시글 저장 중 오류 발생: userId={}, req={}", userId, safeReq(req), e);
+            throw e;
         }
-        return toPostDto(post);
+    }
+
+    private String rootMsg(Throwable t) {
+        Throwable x =t;
+        while (x.getCause() != null) x = x.getCause();
+        return x.getMessage();
+    }
+
+    private Object safeReq(CommunityRequestDto.CreatePost req) {
+        return req == null ? null : Map.of("title", req.getTitle(), "typw", String.valueOf(req.getType()));
     }
 
     @Override
