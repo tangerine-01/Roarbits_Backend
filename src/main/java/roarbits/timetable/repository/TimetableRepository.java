@@ -6,8 +6,7 @@ import org.springframework.data.repository.query.Param;
 import roarbits.timetable.entity.Timetable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public interface TimetableRepository extends JpaRepository<Timetable, Long> {
     // 사용자별 전체 시간표 조회
@@ -20,8 +19,11 @@ public interface TimetableRepository extends JpaRepository<Timetable, Long> {
     Optional<Timetable> findByUser_IdAndIsMainTrue(Long userId);
 
     @Modifying
-            @Query("UPDATE Timetable t SET t.isMain = false WHERE t.user.id = :userId and t.isMain = true")
-            int clearMainByUserId(@Param("userId")Long userId);
+    @Query("UPDATE Timetable t SET t.isMain = false WHERE t.user.id = :userId and t.isMain = true")
+    int clearMainByUserId(@Param("userId")Long userId);
+
+    boolean existsByUser_IdAndIsMainTrue(Long userId);
+    Optional<Timetable> findFirstByUser_IdOrderByTimetableIdDesc(Long userId);
 
     // 삭제
     long deleteByTimetableIdAndUser_Id(Long timetableId, Long userId);

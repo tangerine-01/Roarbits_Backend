@@ -37,10 +37,11 @@ public class TimetableService {
                 .essentialCourse(dto.getEssentialCourse())
                 .graduationRate(dto.getGraduationRate())
                 .category(dto.getCategory())
+                .isMain(!timetableRepository.existsByUser_IdAndIsMainTrue(userId)) // 첫 시간표면 메인으로 설정
                 .build();
 
-        List<TimeSlot> timeSlots = dto.getTimeSlots().stream().map(slotDto -> {
-            Subject subject = subjectRepository.findById(slotDto.getSubjectId())
+        var timeSlots = dto.getTimeSlots().stream().map(slotDto -> {
+            var subject = subjectRepository.findById(slotDto.getSubjectId())
                     .orElseThrow(() -> new IllegalArgumentException("과목을 찾을 수 없습니다."));
 
             return TimeSlot.builder()
@@ -75,19 +76,20 @@ public class TimetableService {
     // 메인 시간표 설정
     public TimetableResponseDto setMainTimetable(Long userId, Long timetableId) {
         Timetable tt = timetableRepository.findByTimetableIdAndUser_Id(timetableId, userId)
-                .orElseThrow(
-                        () -> new IllegalArgumentException("시간표를 찾을 수 없습니다."));
+                .orElseThrow(() -> new IllegalArgumentException("시간표를 찾을 수 없습니다."));
 
-        // 기존 메인 시간표 해제
+        if (Boolean.TRUE.equals(tt.isMain())) {
+            return toResponseDto(tt); // 이미 메인인 경우 그대로 반환
+        }
+
         timetableRepository.clearMainByUserId(userId);
-
-        // 새로운 메인 시간표 설정
         tt.setMain(true);
 
         return toResponseDto(tt);
     }
 
     // 메인 시간표 조회
+    @Transactional
     public TimetableResponseDto getMainTimetable(Long userId) {
         Timetable tt = timetableRepository.findByUser_IdAndIsMainTrue(userId)
                 .orElseThrow(() -> new IllegalArgumentException("메인 시간표가 설정되어 있지 않습니다."));
@@ -96,8 +98,17 @@ public class TimetableService {
 
     // 시간표 삭제
     public void deleteTimetable(Long userId, Long timetableId) {
-        long n = timetableRepository.deleteByTimetableIdAndUser_Id(timetableId, userId);
-        if (n == 0) throw new IllegalArgumentException("권한이 없거나 존재하지 않는 시간표입니다.");
+        Timetable tt = timetableRepository.findByTimetableIdAndUser_Id(timetableId, userId)
+                .orElseThrow(() -> new IllegalArgumentException("시간표를 찾을 수 없습니다."));
+
+        boolean wasMain = Boolean.TRUE.equals(tt.isMain());
+        timeSlotRepository.deleteByTimetable(tt);
+        timetableRepository.delete(tt);
+
+        // 메인 시간표였으면 다른 시간표를 메인으로 설정
+        if (wasMain) {
+            timetableRepository.findFirstByUser_IdOrderByTimetableIdDesc(userId).ifPresent(next -> next.setMain(true));
+        }
     }
 
     // 엔티티 -> DTO 변환
