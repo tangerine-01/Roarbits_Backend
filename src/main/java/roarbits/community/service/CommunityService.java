@@ -1,5 +1,6 @@
 package roarbits.community.service;
 
+import org.springframework.data.domain.Page;
 import roarbits.community.dto.CommunityRequestDto;
 import roarbits.community.dto.CommunityResponseDto;
 
@@ -10,6 +11,7 @@ public interface CommunityService {
     CommunityResponseDto.Post updatePost(Long postId, Long userId, CommunityRequestDto.UpdatePost req);
     void deletePost(Long postId, Long userId);
 
+    Page<CommunityResponseDto.Post> listPosts(Integer page, Integer size, String sort, String type);
 
     //Comment
     CommunityResponseDto.Comment createComment(Long userId, CommunityRequestDto.CreateComment req);

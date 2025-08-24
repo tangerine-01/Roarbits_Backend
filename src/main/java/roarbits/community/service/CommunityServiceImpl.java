@@ -7,12 +7,14 @@ import roarbits.community.dto.CommunityRequestDto;
 import roarbits.community.dto.CommunityResponseDto;
 import roarbits.community.entity.CommunityPost;
 import roarbits.community.entity.CommunityComment;
+import roarbits.community.entity.PostType;
 import roarbits.community.repository.CommunityPostRepository;
 import roarbits.community.repository.CommunityCommentRepository;
 import roarbits.user.entity.User;
 import roarbits.user.repository.UserRepository;
 import org.springframework.web.server.ResponseStatusException;
 import static org.springframework.http.HttpStatus.*;
+import org.springframework.data.domain.*;
 
 import java.time.LocalDateTime;
 
@@ -93,6 +95,32 @@ public class CommunityServiceImpl implements CommunityService {
             throw new ResponseStatusException(CONFLICT, "이미 삭제되었거나 삭제할 수 없는 게시글입니다.");
         }
     }
+
+    @Override
+    public Page<CommunityResponseDto.Post> listPosts(Integer page, Integer size, String sort, String type) {
+        int p = (page == null || page < 0) ? 0 : page;
+        int s = (size == null || size <= 0 || size > 100) ? 20 : size;
+
+        Sort sortSpec = "OLDEST".equalsIgnoreCase(sort)
+                ? Sort.by(Sort.Direction.ASC, "createdAt")
+                : Sort.by(Sort.Direction.DESC, "createdAt");
+
+        Pageable pageable = PageRequest.of(p, s, sortSpec);
+
+        Page<CommunityPost> pageData;
+        if (type != null && !type.isBlank()) {
+            PostType t;
+            try {
+                t = PostType.valueOf(type.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new ResponseStatusException(BAD_REQUEST, "유효하지 않은 게시글 유형입니다.");
+            }
+            pageData = postRepo.findAllByIsDeletedFalseAndType(t,pageable);
+        } else{
+        pageData = postRepo.findAllByIsDeletedFalse(pageable);
+    }
+        return pageData.map(this::toPostDto);
+}
 
     // Comment
     @Override

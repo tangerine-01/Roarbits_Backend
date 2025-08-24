@@ -5,20 +5,19 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.Parameter;
 
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import roarbits.community.dto.CommunityRequestDto;
 import roarbits.community.dto.CommunityResponseDto;
 import roarbits.community.service.CommunityService;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.data.domain.Page;
 
 import java.net.URI;
 
@@ -55,6 +54,26 @@ public class CommunityPostController {
             security = { @SecurityRequirement(name = "Authorization") })
     public ResponseEntity<CommunityResponseDto.Post> getPost(@PathVariable Long postId) {
         return ResponseEntity.ok(communityService.getPost(postId));
+    }
+
+    // 게시글 전체 조회
+    @GetMapping
+    @Operation(
+            summary = "게시글 전체 조회",
+            description = "커뮤니티 게시글을 전체 조회합니다. 페이지네이션, 정렬, 타입 필터링이 가능합니다.",
+            security = { @SecurityRequirement(name = "Authorization") })
+    public ResponseEntity<Page<CommunityResponseDto.Post>> listPosts(
+            @Parameter(description = "페이지(0부터 시작)", example = "0")
+            @RequestParam(required = false) Integer page,
+            @Parameter(description = "페이지 크기(1~100)", example = "20")
+            @RequestParam(required = false) Integer size,
+            @Parameter(description = "정렬 기준(작성일: createdAt)", example = "createdAt")
+            @RequestParam(required = false) String sort,
+            @Parameter(description = "게시글 타입(ALL, FREE, QUESTION, INFORMATION)", example = "ALL")
+            @RequestParam(required = false) String type
+    ) {
+        var result = communityService.listPosts(page, size, sort, type);
+        return ResponseEntity.ok(result);
     }
 
     // 게시글 수정

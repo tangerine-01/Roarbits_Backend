@@ -21,6 +21,8 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, Lo
 
     Page<CommunityPost> findAllByTypeAndIsDeletedFalse(Pageable pageable, PostType type);
 
+    Page<CommunityPost> findAllByIsDeletedFalseAndType(PostType type, Pageable pageable);
+
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Transactional
     @Query("""
