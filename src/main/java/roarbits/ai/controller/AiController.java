@@ -129,7 +129,6 @@ public class AiController {
                     return true;
                 }
             } catch (Exception ignored) {
-                // 무시하고 계속 진행
             }
         }
         return false;

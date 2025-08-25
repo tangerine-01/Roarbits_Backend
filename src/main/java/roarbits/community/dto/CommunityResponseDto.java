@@ -15,11 +15,6 @@ public class CommunityResponseDto {
         private String content;
         private Long authorId;
 
-        //private Double lat;
-        //private Double lng;
-        //private LocalDateTime meetTime;
-        //private Integer maxParticipants;
-
         private long commentCount;
         private boolean deleted;
         private LocalDateTime createdAt;
