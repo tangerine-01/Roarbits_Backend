@@ -13,6 +13,12 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import roarbits.community.dto.CommunityRequestDto;
 import roarbits.community.dto.CommunityResponseDto;
 import roarbits.community.service.CommunityService;
+import roarbits.global.api.ApiResponse;
+import roarbits.community.dto.CommentResponseDto;
+import roarbits.community.service.CommunityCommentService;
+import roarbits.global.api.SuccessCode;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/community/comments")
@@ -21,6 +27,7 @@ import roarbits.community.service.CommunityService;
 
 public class CommunityCommentController {
     private final CommunityService service;
+    private final CommunityCommentService commentService;
 
     // 댓글 생성
     @PostMapping
@@ -61,5 +68,13 @@ public class CommunityCommentController {
             @AuthenticationPrincipal(expression = "id") Long userId) {
         service.deleteComment(commentId, userId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/posts/{postId}/comments")
+    @Operation(summary = "게시물 댓글 조회", description = "게시물 ID로 댓글 목록을 조회합니다.")
+    public ApiResponse<List<CommentResponseDto>> getCommentsByPost(@PathVariable Long postId) {
+        List<CommentResponseDto> comments = commentService.getCommentsByPostId(postId);
+        return ApiResponse.onSuccess(SuccessCode.COMMENT_LIST_SUCCESS, comments);
+
     }
 }

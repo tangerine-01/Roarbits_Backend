@@ -8,6 +8,8 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
+import java.util.List;
+
 public interface CommunityCommentRepository extends JpaRepository<CommunityComment, Long> {
     Page<CommunityComment> findByPostId(Long postId, Pageable pageable);
     long countByPostId(Long postId);
@@ -22,4 +24,6 @@ public interface CommunityCommentRepository extends JpaRepository<CommunityComme
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("update CommunityComment c set c.isDeleted = true where c.id = :id and id(c.writer) = :userId")
     int softDeleteByIdAndWriter_Id(@Param("id") Long id, @Param("userId") Long userId);
+
+    List<CommunityComment> findByPostId(Long postId);
 }
