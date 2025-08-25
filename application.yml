@@ -1,0 +1,3 @@
+spring:
+  jackson:
+    time-zone: Asia/Seoul
