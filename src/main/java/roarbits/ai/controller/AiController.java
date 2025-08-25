@@ -36,7 +36,7 @@ public class AiController {
 
         String scheduleJson;
         try {
-            scheduleJson = objectMapper.writeValueAsString(main);
+            scheduleJson = toCompactScheduleJson(main);
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "시간표 직렬화 실패", e);
         }
