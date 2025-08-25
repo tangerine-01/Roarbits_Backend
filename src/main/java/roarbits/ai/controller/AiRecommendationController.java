@@ -14,7 +14,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/ai")
 @RequiredArgsConstructor
-public class AiRecommandationController {
+public class AiRecommendationController {
     private final AiRecommendationService aiService;
     private final AiPublishFacade publishFacade;
 

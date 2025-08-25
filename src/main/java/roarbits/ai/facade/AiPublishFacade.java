@@ -33,7 +33,7 @@ public class AiPublishFacade {
         CommunityRequestDto.CreatePost req = CommunityRequestDto.CreatePost.builder()
                 .title(title)
                 .content(content)
-                .type(postType)   // ★ enum 주입
+                .type(postType)
                 .build();
 
         return communityService.createPost(writerId, req);

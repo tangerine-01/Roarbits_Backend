@@ -70,8 +70,6 @@ public class SchedulePayload {
                 .build();
     }
 
-    /* ----------------- Helpers ----------------- */
-
     private static int toMin(LocalTime t) {
         if (t == null) return 0;
         return t.getHour() * 60 + t.getMinute();

@@ -71,6 +71,7 @@ public class AiRecommendationService {
                 .accept(MediaType.APPLICATION_JSON)
                 .bodyValue(requestBody)
                 .retrieve()
+                .onStatus(status -> status.isError(), this::toApiError)
                 .bodyToMono(String.class)   // 우선 문자열로 받고,
                 .block();
 
