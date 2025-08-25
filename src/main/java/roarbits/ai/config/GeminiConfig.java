@@ -23,8 +23,8 @@ public class GeminiConfig {
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 15000)
                 .responseTimeout(Duration.ofSeconds(20))
                 .doOnConnected(conn -> {
-                conn.addHandlerLast(new ReadTimeoutHandler(10));
-                conn.addHandlerLast(new WriteTimeoutHandler(10));
+                conn.addHandlerLast(new ReadTimeoutHandler(30));
+                conn.addHandlerLast(new WriteTimeoutHandler(30));
                 });
 
         return WebClient.builder()
