@@ -1,10 +1,10 @@
 package roarbits.ai.controller;
 
+import org.springframework.security.oauth2.jwt.Jwt;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -27,21 +27,25 @@ public class AiController {
 
     @PostMapping("/recommendation/auto")
     public ResponseEntity<List<String>> getRecommendation(
-            @AuthenticationPrincipal(expression = "id") Long userId
-    ) {
+            @AuthenticationPrincipal Jwt jwt){
+        Long userId = extractUserId(jwt);
         if (userId == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
 
         TimetableResponseDto main = timetableService.getMainTimetableOptional(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "등록된 시간표가 없습니다."));
 
-        String scheduleJson;
-        try {
-            scheduleJson = toCompactScheduleJson(main);
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "시간표 직렬화 실패", e);
-        }
-
+        String scheduleJson = toCompactScheduleJson(main);
         return ResponseEntity.ok(aiRecommendationService.generateRecommendation(scheduleJson));
+    }
+
+    private Long extractUserId(Jwt jwt) {
+        if (jwt == null) return null;
+        Object v = jwt.getClaim("id");
+        if (v instanceof Number n1) return n1.longValue();
+        v = jwt.getClaim("userId");
+        if (v instanceof Number n2) return n2.longValue();
+        String sub = jwt.getSubject();
+        return (sub != null && sub.matches("\\d+")) ? Long.parseLong(sub) : null;
     }
 
     private String toCompactScheduleJson(TimetableResponseDto tt) {
