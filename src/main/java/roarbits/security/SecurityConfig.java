@@ -18,6 +18,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import roarbits.login.auth.jwt.JwtTokenProvider;
 import roarbits.login.auth.jwt.JwtValidationFilter;
+import static org.springframework.security.config.Customizer.withDefaults;
 
 import java.util.List;
 
@@ -90,7 +91,7 @@ public class SecurityConfig {
                 .securityMatcher("/api/**")
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .formLogin(form -> form.disable())
                 .httpBasic(basic -> basic.disable())
                 .authorizeHttpRequests(auth -> auth
@@ -100,8 +101,10 @@ public class SecurityConfig {
                         .requestMatchers(SWAGGER_API).permitAll()
                         .requestMatchers("/api/interest/**").authenticated()
                         .requestMatchers("/api/course-histories/**").authenticated()
+                        .requestMatchers("/ai/**").authenticated()
                         .anyRequest().authenticated()
                 )
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(withDefaults()))
                 .exceptionHandling(ex -> ex.authenticationEntryPoint((req, res, e) -> {
                     res.setStatus(401);
                     res.setContentType("application/json");

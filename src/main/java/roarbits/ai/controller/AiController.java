@@ -5,13 +5,19 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+
 import roarbits.ai.service.AiRecommendationService;
 import roarbits.timetable.dto.TimetableResponseDto;
 import roarbits.timetable.dto.TimeSlotDto;
 import roarbits.timetable.service.TimetableService;
+import roarbits.user.entity.User;
+import roarbits.user.repository.UserRepository;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -24,11 +30,11 @@ public class AiController {
     private final AiRecommendationService aiRecommendationService;
     private final TimetableService timetableService;
     private final ObjectMapper objectMapper;
+    private final UserRepository userRepository;
 
     @PostMapping("/recommendation/auto")
-    public ResponseEntity<List<String>> getRecommendation(
-            @AuthenticationPrincipal Jwt jwt){
-        Long userId = extractUserId(jwt);
+    public ResponseEntity<List<String>> getRecommendation(Authentication auth){
+        Long userId = extractUserId(auth);
         if (userId == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
 
         TimetableResponseDto main = timetableService.getMainTimetableOptional(userId)
@@ -38,14 +44,46 @@ public class AiController {
         return ResponseEntity.ok(aiRecommendationService.generateRecommendation(scheduleJson));
     }
 
-    private Long extractUserId(Jwt jwt) {
-        if (jwt == null) return null;
-        Object v = jwt.getClaim("id");
-        if (v instanceof Number n1) return n1.longValue();
-        v = jwt.getClaim("userId");
-        if (v instanceof Number n2) return n2.longValue();
-        String sub = jwt.getSubject();
-        return (sub != null && sub.matches("\\d+")) ? Long.parseLong(sub) : null;
+    private Long extractUserId(Authentication auth) {
+        if (auth == null || !auth.isAuthenticated()) return null;
+
+        if (auth instanceof JwtAuthenticationToken jat) {
+            Jwt jwt = jat.getToken();
+            Object v = jwt.getClaim("id");
+            if (v instanceof Number n1) return n1.longValue();
+            v = jwt.getClaim("userId");
+            if (v instanceof Number n2) return n2.longValue();
+            String sub = jwt.getSubject();
+            if (sub != null) {
+                if (sub.matches("\\d+")) return Long.parseLong(sub);
+                return findUserIdByUsernameOrEmail(sub);
+            }
+            return null;
+        }
+
+        Object principal = auth.getPrincipal();
+        if (principal instanceof UserDetails ud) {
+            try {
+                var m = ud.getClass().getMethod("getId");
+                Object v = m.invoke(ud);
+                if (v instanceof Number n) return n.longValue();
+            } catch (Exception ignored) {}
+            return findUserIdByUsernameOrEmail(ud.getUsername());
+        }
+
+        if (principal instanceof String s) {
+            return findUserIdByUsernameOrEmail(s);
+        }
+
+        return null;
+    }
+
+    private Long findUserIdByUsernameOrEmail(String key) {
+        if (key == null || key.isBlank()) return null;
+        Optional<User> byUsername = userRepository.findByUsername(key);
+        if (byUsername.isPresent()) return byUsername.get().getId();
+        Optional<User> byEmail = userRepository.findByEmail(key);
+        return byEmail.map(User::getId).orElse(null);
     }
 
     private String toCompactScheduleJson(TimetableResponseDto tt) {
