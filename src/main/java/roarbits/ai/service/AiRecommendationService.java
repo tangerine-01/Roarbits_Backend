@@ -63,7 +63,7 @@ public class AiRecommendationService {
                         "금 17:30 수업 끝! 정문 맞은편 골목 신상 카레집 가볼 사람 모여라~" +
                         "수 19:00 코딩 인터뷰 준비(React + 자료구조), 후문 스터디카페 2시간 번개" +
                         "화 12:00 점심 공강이면 △△분식 밥팟 모집해요!" +
-                        "이런식으로 작성해.";
+                        "예시 시간은 무시하고 사용자 시간표(JSON)을 바탕으로 위의 예시처럼 작성해.";
 
         // ★ 핵심: 'contents'가 정식 필드명 (기존 코드 'contexts'는 오타)
         Map<String, Object> requestBody = Map.of(
