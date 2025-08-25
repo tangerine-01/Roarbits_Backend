@@ -23,6 +23,8 @@ public class Timetable {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    private Long id;
+
     @Column(name = "is_main", nullable = false)
     private boolean isMain;
 
@@ -53,6 +55,17 @@ public class Timetable {
     public void removeTimeSlot(TimeSlot timeSlot) {
         timeSlots.remove(timeSlot);
         timeSlot.setTimetable(null);
+    }
+
+    @Column(name = "is_active", nullable = false)
+    private boolean isActive = false;
+
+    public void activate() { this.isActive = true; }
+    public void deactivate() { this.isActive = false; }
+    public boolean isActive() { return isActive; }
+
+    public Long getId() {
+                        return this.id != null ? this.id : this.timetableId;
     }
 
     private Integer preferCredit;

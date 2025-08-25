@@ -52,6 +52,12 @@ public class TimetableController {
         return ResponseEntity.ok(timetableService.getMainTimetable(userId));
     }
 
+    @PatchMapping("/{id}/activate")
+    public ResponseEntity<Void> activate(@PathVariable Long id, @RequestParam Long userId) {
+                timetableService.activateTimetable(userId, id);
+                return ResponseEntity.noContent().build();
+    }
+
     // 시간표 생성
     @PostMapping
     @Operation(

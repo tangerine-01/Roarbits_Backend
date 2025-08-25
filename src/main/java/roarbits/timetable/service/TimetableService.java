@@ -97,6 +97,13 @@ public class TimetableService {
         return toResponseDto(tt);
     }
 
+    public void activateTimetable(Long userId, Long timetableId) {
+                timetableRepository.clearActive(userId);
+                Timetable t = timetableRepository.findByIdAndUserId(timetableId, userId)
+                                .orElseThrow(() -> new IllegalArgumentException("시간표가 없거나 권한 없음"));
+                t.activate();
+            }
+
     public Optional<TimetableResponseDto> getMainTimetableOptional(Long userId) {
         Timetable t =
                 timetableRepository.findMainWithSlotsByUserId(userId).orElse(null);

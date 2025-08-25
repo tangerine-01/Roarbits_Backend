@@ -1,5 +1,6 @@
 package roarbits.timetable.repository;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,6 +18,14 @@ public interface TimetableRepository extends JpaRepository<Timetable, Long> {
 
     // 메인 시간표 확인
     Optional<Timetable> findByUser_IdAndIsMainTrue(Long userId);
+
+    @EntityGraph(attributePaths = {"timeSlots", "timeSlots.subject"})
+    Optional<Timetable> findByUserIdAndIsActiveTrue(Long userId);
+
+    @Modifying
+    @Query("update Timetable t set t.isActive=false where t.user.id = :userId and t.isActive=true")
+    int clearActive(@Param("userId") Long userId);
+    Optional<Timetable> findByIdAndUserId(Long id, Long userId);
 
     @Modifying
     @Query("UPDATE Timetable t SET t.isMain = false WHERE t.user.id = :userId and t.isMain = true")
