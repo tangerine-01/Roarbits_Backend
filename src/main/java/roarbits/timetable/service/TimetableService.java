@@ -126,16 +126,16 @@ public class TimetableService {
                 category = "GENERAL";
             }
 
-            String discipline = subject.getDiscipline();
-            if (discipline == null || discipline.isBlank()) {
-                discipline = "기타";
+            String description = subject.getDiscipline();
+            if (description == null || description.isBlank()) {
+                description = "기타";
             }
 
             return TimeSlotDto.builder()
                     .subjectId(subject.getId())
                     .subjectName(subject.getName())
                     .courseType(subject.getCourseType())
-                    .discipline(discipline)
+                    .description(description)
                     .classroom(subject.getClassroom())
                     .professor(subject.getProfessor())
                     .credit(subject.getCredit())

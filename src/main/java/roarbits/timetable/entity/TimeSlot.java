@@ -33,4 +33,6 @@ public class TimeSlot {
 
     @Column(nullable = false)
     private LocalTime endTime;
+
+    private String description;
 }

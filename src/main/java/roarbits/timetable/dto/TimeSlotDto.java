@@ -42,7 +42,7 @@ public class TimeSlotDto {
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Schema(accessMode = Schema.AccessMode.READ_ONLY)
-    private String discipline;  // 교양과정 구분 (예: "철학과 역사", "소양")
+    private String description;  // 교양과정 구분 (예: "철학과 역사", "소양")
 
     @Min(value = 0, message = "요일은 0(월요일)부터 6(일요일)까지의 값이어야 합니다.")
     @Max(value = 6, message = "요일은 0(월요일)부터 6(일요일)까지의 값이어야 합니다.")
