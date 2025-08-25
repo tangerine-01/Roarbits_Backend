@@ -91,7 +91,7 @@ public class SecurityConfig {
                 .securityMatcher("/api/**")
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .formLogin(form -> form.disable())
                 .httpBasic(basic -> basic.disable())
                 .authorizeHttpRequests(auth -> auth
@@ -104,7 +104,6 @@ public class SecurityConfig {
                         .requestMatchers("/ai/**").authenticated()
                         .anyRequest().authenticated()
                 )
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(withDefaults()))
                 .exceptionHandling(ex -> ex.authenticationEntryPoint((req, res, e) -> {
                     res.setStatus(401);
                     res.setContentType("application/json");
