@@ -100,6 +100,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/v3/api-docs/**").permitAll()
                         .requestMatchers(SWAGGER_API).permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/ai/recommendations").permitAll() // 배너용 조회
+                        .requestMatchers(HttpMethod.POST, "/api/ai/recommendations/publish").authenticated()
                         .requestMatchers("/api/interest/**").authenticated()
                         .requestMatchers("/api/course-histories/**").authenticated()
                         .requestMatchers("/ai/**").authenticated()

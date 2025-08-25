@@ -1,9 +1,11 @@
-package roarbits.ai.service;
+package roarbits.ai.facade;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import roarbits.ai.service.AiRecommendationService;
+import roarbits.ai.service.SchedulePayload;
 import roarbits.timetable.entity.Timetable;
 import roarbits.timetable.repository.TimetableRepository;
 

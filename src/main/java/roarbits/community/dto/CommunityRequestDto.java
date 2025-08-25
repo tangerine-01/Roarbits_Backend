@@ -4,8 +4,11 @@ import jakarta.validation.constraints.*;
 import lombok.*;
 import roarbits.community.entity.PostType;
 
+
 public class CommunityRequestDto {
     @Getter @Setter @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
     public static class CreatePost {
         @NotBlank(message = "제목은 필수입니다.") @Size(max = 100) private String title;
         @NotBlank(message = "내용은 필수입니다.") @Size(max = 5000) private String content;

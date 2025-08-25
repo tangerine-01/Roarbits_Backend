@@ -1,7 +1,6 @@
 package roarbits.ai.service;
 
 import org.springframework.stereotype.Service;
-import roarbits.ai.prompt.SchedulePromptBuilder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -18,9 +17,13 @@ import org.springframework.http.HttpStatusCode;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
+import java.util.UUID;
 import java.util.regex.Pattern;
-import java.time.Duration;
 import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import roarbits.ai.dto.RecommendationResponseDto;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +32,8 @@ public class AiRecommendationService {
 
     @Value("${gemini.api-key}")
     private String geminiApiKey;
+
+    private final ObjectMapper objectMapper;
 
     private static final ObjectMapper mapper = new ObjectMapper();
     private static final Pattern BULLET_PREFIX = Pattern.compile("^\\s*([-*•\\d\\.\\)]+)\\s*");
@@ -39,23 +44,25 @@ public class AiRecommendationService {
     """.formatted(msg);
     }
 
+    private static final Logger log = LoggerFactory.getLogger(AiRecommendationService.class);
+
     public List<String> generateRecommendation(String scheduleJson) {
-        if (scheduleJson == null || scheduleJson.isBlank() || "{}".equals(scheduleJson.trim())) {
-            return List.of("추천 문구가 생성되지 않았습니다.");
-        }
+        // 프롬프트 문자열에 개행이 있어도 bodyValue로 넘기면 Jackson이 자동 이스케이프함.
+        String prompt =
+                "다음은 사용자의 주간 시간표 JSON입니다.\n" +
+                        scheduleJson + "\n\n" +
+                        "위 시간표를 고려하여 지금 시각 기준으로 가능한 3개의 행동 추천을 bullet 형식으로 제시해줘. " +
+                        "각 항목은 한 줄 60자 이내로 간결하게.";
 
-        String prompt = SchedulePromptBuilder.build(scheduleJson)
-                + "\n다음 조건을 지켜서 3개의 행동 추천을 bullet 형식으로 제공해줘."
-                + "\n- 한 줄에 하나씩, 20~60자. \n- 실행 가능한 구체 동사로 시작.";
-
-        // 요청 본문
+        // ★ 핵심: 'contents'가 정식 필드명 (기존 코드 'contexts'는 오타)
         Map<String, Object> requestBody = Map.of(
                 "contents", List.of(
                         Map.of("parts", List.of(Map.of("text", prompt)))
-                ));
+                )
+        );
 
-        // Gemini API 호출
-        String response = geminiWebClient.post()
+        // 요청 보내기 (절대 문자열로 JSON을 직접 만들지 말고 bodyValue 사용)
+        String raw = geminiWebClient.post()
                 .uri(uriBuilder -> uriBuilder
                         .path("/v1beta/models/gemini-1.5-flash:generateContent")
                         .queryParam("key", geminiApiKey)
@@ -63,27 +70,67 @@ public class AiRecommendationService {
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .bodyValue(requestBody)
-                .exchangeToMono(resp -> {
-                    HttpStatusCode sc = resp.statusCode();
-                    if (sc.is2xxSuccessful()) {
-                        return resp.bodyToMono(String.class);
-                    }
-                    if (sc.value() == 429) {
-                        return Mono.just(fallbackJson("AI 서비스 요청 한도를 초과했습니다. 잠시 후 다시 시도해주세요."));
-                    }
-                    if (sc.is5xxServerError()) {
-                        return Mono.just(fallbackJson("AI 서비스가 일시적으로 중단되었습니다. 잠시 후 다시 시도해주세요."));
-                    }
-                    return resp.bodyToMono(String.class)
-                            .defaultIfEmpty("")
-                            .map(body -> fallbackJson("API 요청 실패: " + body));
-                })
-                .timeout(Duration.ofSeconds(20))
-                .onErrorReturn(fallbackJson("AI 서비스와의 통신 중 오류가 발생했습니다."))
+                .retrieve()
+                .bodyToMono(String.class)   // 우선 문자열로 받고,
                 .block();
 
-        return extractTextList(response);
+        if (raw == null || raw.isBlank()) {
+            throw new IllegalStateException("[AI] 빈 응답");
+        }
+
+        // 일부 구글 API 계열이 넣는 XSSI 프리픽스 보호
+        String sanitized = stripXssiPrefix(raw);
+
+        JsonNode root;
+        try {
+            root = objectMapper.readTree(sanitized);
+        } catch (Exception e) {
+            log.error("[AI] 응답 파싱 실패. 원본 응답(앞 500자): {}", sanitized.substring(0, Math.min(500, sanitized.length())));
+            throw new IllegalStateException("응답 파싱 실패", e);
+        }
+
+        // candidates[0].content.parts[*].text 추출
+        JsonNode candidates = root.path("candidates");
+        if (!candidates.isArray() || candidates.isEmpty()) {
+            throw new IllegalStateException("[AI] candidates가 비었습니다: " + sanitized);
+        }
+        JsonNode parts = candidates.get(0).path("content").path("parts");
+        if (!parts.isArray() || parts.isEmpty()) {
+            throw new IllegalStateException("[AI] parts가 비었습니다: " + sanitized);
+        }
+        String text = parts.get(0).path("text").asText("");
+
+        // 애초에 한 번에 bullet 3개를 text로 주게 했으므로, 개행으로 분리
+        return text.lines()
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .limit(3)
+                .toList();
     }
+
+    private static String stripXssiPrefix(String s) {
+        // 예: ")]}'\n{...}" 형태라면 프리픽스 제거
+        if (s.startsWith(")]}'")) {
+            int i = s.indexOf('\n');
+            return (i >= 0) ? s.substring(i + 1) : s;
+        }
+        return s;
+    }
+
+    public List<RecommendationResponseDto.Item> generateRecommendationItems(String scheduleJson, String purpose) {
+        List<String> lines = generateRecommendation(scheduleJson);
+
+        List<RecommendationResponseDto.Item> items = new ArrayList<>();
+        for (String s : lines) {
+            if (s == null || s.isBlank()) continue;
+            items.add(RecommendationResponseDto.Item.builder()
+                    .id(UUID.randomUUID().toString())
+                    .text(s.trim())
+                    .build());
+        }
+        return items;
+    }
+
 
     private Mono<? extends Throwable> toApiError(ClientResponse response) {
         return response.bodyToMono(String.class)
