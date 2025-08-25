@@ -79,7 +79,6 @@ public class AiRecommendationService {
             throw new IllegalStateException("[AI] 빈 응답");
         }
 
-        // 일부 구글 API 계열이 넣는 XSSI 프리픽스 보호
         String sanitized = stripXssiPrefix(raw);
 
         JsonNode root;
