@@ -2,7 +2,9 @@ package roarbits.timetable.dto;
 
 import lombok.*;
 
-import java.time.LocalTime;
+import roarbits.timetable.entity.Timetable;
+
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -21,5 +23,21 @@ public class TimetableResponseDto {
     private Double graduationRate; // 졸업률
     private String category;
 
-    private List<TimeSlotDto> timeSlots; // 시간표에 포함된 과목들
+    @Builder.Default
+    private List<TimeSlotDto> timeSlots = new ArrayList<>(); // 시간표에 포함된 과목들
+
+    public static TimetableResponseDto fromEntity(Timetable t, List<TimeSlotDto> slots) {
+        return TimetableResponseDto.builder()
+                .timetableId(t.getTimetableId())
+                .userId(t.getUser().getId())
+                .preferCredit(t.getPreferCredit())
+                .preferTime(t.getPreferTime())
+                .morningClassNum(t.getMorningClassNum())
+                .freePeriodNum(t.getFreePeriodNum())
+                .essentialCourse(t.getEssentialCourse())
+                .graduationRate(t.getGraduationRate())
+                .category(t.getCategory())
+                .timeSlots(slots == null ? List.of() : slots)
+                .build();
+    }
 }

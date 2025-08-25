@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import roarbits.user.entity.User;
 import roarbits.user.repository.UserRepository;
+import roarbits.timetable.entity.TimeSlot;
 
 import java.time.LocalTime;
 import java.util.*;
@@ -97,8 +98,19 @@ public class TimetableService {
     }
 
     public Optional<TimetableResponseDto> getMainTimetableOptional(Long userId) {
-        return timetableRepository.findByUser_IdAndIsMainTrue(userId)
-                .map(this::toResponseDto);
+        Timetable t =
+                timetableRepository.findMainWithSlotsByUserId(userId).orElse(null);
+        if (t == null) {
+            return Optional.empty();
+        }
+
+        List<TimeSlotDto> slots =
+                (t.getTimeSlots() == null ? java.util.List.<roarbits.timetable.entity.TimeSlot>of() : t.getTimeSlots())
+                        .stream()
+                        .map(TimeSlotDto::fromEntity)
+                        .toList();
+
+        return Optional.of(TimetableResponseDto.fromEntity(t, slots));
     }
 
     // 시간표 삭제

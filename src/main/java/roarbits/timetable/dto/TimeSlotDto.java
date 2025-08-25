@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 import lombok.*;
+import roarbits.timetable.entity.TimeSlot;
+
+import java.time.LocalTime;
 
 @Getter
 @Setter
@@ -51,4 +54,19 @@ public class TimeSlotDto {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Schema(accessMode = Schema.AccessMode.READ_ONLY)
     private String category; // 과목 카테고리 (예: "전공", "교양")
+
+    public static TimeSlotDto fromEntity(TimeSlot ts) {
+        String start = null, end = null;
+        LocalTime st = ts.getStartTime();
+        LocalTime et = ts.getEndTime();
+        if (st != null) start = st.toString();
+        if (et != null) end = et.toString();
+
+        return TimeSlotDto.builder()
+                .subjectName(null)      // ← 필요하면 ts.getSubject().getName() 으로 변경
+                .startTime(start)
+                .endTime(end)
+                .day(ts.getDay())
+                .build();
+    }
 }

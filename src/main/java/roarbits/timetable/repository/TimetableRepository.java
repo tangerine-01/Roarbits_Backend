@@ -25,6 +25,15 @@ public interface TimetableRepository extends JpaRepository<Timetable, Long> {
     boolean existsByUser_IdAndIsMainTrue(Long userId);
     Optional<Timetable> findFirstByUser_IdOrderByTimetableIdDesc(Long userId);
 
+    @Query("""
+    select distinct t
+    from Timetable t
+    left join fetch t.timeSlots ts
+    where t.user.id = :userId
+    and t.isMain = true
+    """)
+    Optional<Timetable> findMainWithSlotsByUserId(@Param("userId") Long userId);
+
     // 삭제
     long deleteByTimetableIdAndUser_Id(Long timetableId, Long userId);
 }
