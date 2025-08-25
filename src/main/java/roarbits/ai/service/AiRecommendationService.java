@@ -33,6 +33,12 @@ public class AiRecommendationService {
     private static final ObjectMapper mapper = new ObjectMapper();
     private static final Pattern BULLET_PREFIX = Pattern.compile("^\\s*([-*•\\d\\.\\)]+)\\s*");
 
+    private String fallbackJson(String msg) {
+        return """
+    {"candidates":[{"content":{"parts":[{"text":"%s"}]}}]}
+    """.formatted(msg);
+    }
+
     public List<String> generateRecommendation(String scheduleJson) {
         if (scheduleJson == null || scheduleJson.isBlank() || "{}".equals(scheduleJson.trim())) {
             return List.of("추천 문구가 생성되지 않았습니다.");
@@ -57,12 +63,23 @@ public class AiRecommendationService {
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .bodyValue(requestBody)
-                .retrieve()
-                .onStatus(s -> s.is4xxClientError() || s.is5xxServerError(),
-                        this::toApiError)
-                .bodyToMono(String.class)
+                .exchangeToMono(resp -> {
+                    HttpStatusCode sc = resp.statusCode();
+                    if (sc.is2xxSuccessful()) {
+                        return resp.bodyToMono(String.class);
+                    }
+                    if (sc.value() == 429) {
+                        return Mono.just(fallbackJson("AI 서비스 요청 한도를 초과했습니다. 잠시 후 다시 시도해주세요."));
+                    }
+                    if (sc.is5xxServerError()) {
+                        return Mono.just(fallbackJson("AI 서비스가 일시적으로 중단되었습니다. 잠시 후 다시 시도해주세요."));
+                    }
+                    return resp.bodyToMono(String.class)
+                            .defaultIfEmpty("")
+                            .map(body -> fallbackJson("API 요청 실패: " + body));
+                })
                 .timeout(Duration.ofSeconds(20))
-                .onErrorResume(error -> Mono.just("{\"candidates\": [{\"content\": {\"parts\": [{\"text\": \"추천 문구 생성에 실패했습니다.\"}]}}]}"))
+                .onErrorReturn(fallbackJson("AI 서비스와의 통신 중 오류가 발생했습니다."))
                 .block();
 
         return extractTextList(response);
@@ -86,25 +103,29 @@ public class AiRecommendationService {
     private List<String> extractTextList(String response) {
         try {
             JsonNode root = mapper.readTree(response);
-            ArrayNode candidates = (ArrayNode) root.path("candidates");
+            ArrayNode candidates = root.has("candidates") && root.get("candidates").isArray()
+                    ? (ArrayNode) root.get("candidates") : null;
             if (candidates == null || candidates.isEmpty()) {
                 return List.of("추천 문구가 없습니다.");
             }
 
-            JsonNode content = candidates.get(0).path("content");
-            ArrayNode parts = (ArrayNode) content.path("parts");
-
-            if(parts == null || parts.isEmpty()) {
+            JsonNode first = candidates.get(0);
+            if (first == null) {
                 return List.of("추천 문구가 없습니다.");
             }
 
-            String joined = new StringBuilder()
-                    .append(
-                            toStream(parts)
-                                    .map(p -> p.path("text").asText(""))
-                                    .filter(s -> s !=null && !s.isBlank())
-                                    .collect(Collectors.joining("\n"))
-                    ).toString();
+            JsonNode content = candidates.get(0).path("content");
+
+            ArrayNode parts = content.has("parts") && content.get("parts").isArray()
+                    ? (ArrayNode) content.get("parts") : null;
+            if (parts == null || parts.isEmpty()) {
+                return List.of("추천 문구가 없습니다.");
+            }
+
+            String joined = toStream(parts)
+                    .map(p -> p.path("text").asText(""))
+                    .filter(s -> s !=null && !s.isBlank())
+                    .collect(Collectors.joining("\n"));
 
             if (joined.isBlank()) {
                 return List.of("추천문구가 생성되지 않았습니다.");
