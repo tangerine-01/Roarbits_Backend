@@ -30,8 +30,8 @@ public class AiRecommendationFacade {
             throw new IllegalStateException("시간표 직렬화 실패", e);
         }
 
-        log.info("AI-call user={}, activeTimetable={}, updatedAt={}, hash={}",
-                userId, active.getId(), active.getUpdatedAt(), payload.hash());
+        log.info("AI-call user={}, activeTimetable={}, hash={}",
+                userId, active.getId(), payload.hash());
 
         return aiRecommendationService.generateRecommendation(scheduleJson);
     }
