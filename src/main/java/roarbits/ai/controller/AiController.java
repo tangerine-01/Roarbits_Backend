@@ -80,7 +80,7 @@ public class AiController {
 
     private Long findUserIdByUsernameOrEmail(String key) {
         if (key == null || key.isBlank()) return null;
-        Optional<User> byUsername = userRepository.findByUsername(key);
+        Optional<User> byUsername = userRepository.findByEmail(key);
         if (byUsername.isPresent()) return byUsername.get().getId();
         Optional<User> byEmail = userRepository.findByEmail(key);
         return byEmail.map(User::getId).orElse(null);
